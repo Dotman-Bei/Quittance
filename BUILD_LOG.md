@@ -578,3 +578,90 @@ two bugs were found.
 
 `packages/reference/test/service-state.test.ts` pins the rule: 11 cases covering minority vs majority
 drift, unreachable sellers, stale index entries, and each KeeperHub failure mode. **Tests: 41 → 51.**
+
+---
+
+## 2026-09-15 · D-007 resolved (Option C) · the gate is built and runs end to end
+
+### The decision
+
+**Owner chose Option C**, recorded as **D-009**. The legs are inverted: the buyer pays the seller
+directly with its own wallet; the gate relays, observes, and has KeeperHub execute a **conditional
+fee** only on `DELIVERED_AS_ADVERTISED`.
+
+P4 holds, and not on a technicality: the buyer's wallet is the buyer's, and no signer, write client
+or key enters `apps/` or `packages/`. KeeperHub remains the only path to chain for every transaction
+this codebase causes.
+
+### What was built
+
+**`apps/gate`** — Hono service, two phases:
+
+- `POST /quote` — reads the seller's own 402, parses it against the pinned schemas, derives the
+  advertised terms, and refuses **before any purchase** if the price exceeds the buyer's cap
+  (`REQUIREMENTS_MISMATCH`, `purchased: false`).
+- `POST /call` — relays the **buyer's** signed x402 payment, observes the response, hashes request,
+  response and raw terms, runs `verdict()`, publishes the receipt named by its own leaf, and on
+  `DELIVERED_AS_ADVERTISED` asks KeeperHub to execute the fee.
+- `GET /health` — states which leg KeeperHub executes, and says plainly when KeeperHub is not
+  configured rather than implying readiness.
+
+**`src/keeperhub.ts`** is the only file in the codebase that causes a transaction. It holds no key
+and constructs no signature.
+
+### Two things found in the pinned KeeperHub docs that matter
+
+- **`"simulate": true`** gives a dry run before broadcast — §8.4's "dry run before the first live
+  discharge of each shape", available as shipped.
+- **`Idempotency-Key`** gives native replay protection: "a retry with the same key and the same
+  request body returns the original response… without executing again". Keyed by the authorization
+  nonce, this is §12's idempotency requirement and C-005/G10 **satisfied by KeeperHub rather than
+  reimplemented** (§8.4). We do not build a competing nonce cache.
+
+### Verified end to end against a live third-party seller
+
+| Step | Result |
+|---|---|
+| `POST /quote` against `api.onesource.io` | quote issued; x402 v2, amount 1000 atomic, `eip155:8453`, `mimeTypeAdvertised: true`, real `rawTermsHash` |
+| `POST /quote` with a cap below the price | `REQUIREMENTS_MISMATCH`, `purchased: false` — refused before any money moved |
+| `POST /call` with a deliberately invalid payment | seller returned 400 → verdict **`NOT_DELIVERED`**, `dischargeTxHash: null`, receipt published |
+| `quittance verify` on that receipt, no gate access | **`RE-DERIVES`**, exit 0 |
+| Fresh canonical hash vs the filename | **match** |
+
+The whole mechanism is proven against a live endpoint — read terms, relay, observe, hash, judge,
+publish, and an independent re-derivation agrees. **Only the money has not moved.**
+
+That run is a pipeline test, **not C-004 evidence**: the non-delivery was caused by our own invalid
+payment, not by the seller failing. It is labelled `LOCAL_FIXTURE` and is not in the corpus.
+
+### Documents corrected
+
+Six files asserted underwriting, which D-009 removed. All corrected, and the correction is a
+*narrowing*: `AGENTS.md`, `SECURITY.md`, `ARCHITECTURE.md`, `WHAT_IS_MEASURED.md`, `README.md`,
+`apps/web/components/dashboard/{MechanismStepper,HowItWorks}.tsx`.
+
+The new copy states, in those words, that **Quittance does not protect the buyer from a failed call**
+and that the only thing that changes on failure is that we are not paid.
+
+**One new disclosure added against ourselves** (D-009 Cost 5): the gate earns a fee on
+`DELIVERED_AS_ADVERTISED` and nothing otherwise, so **it is paid to say delivery succeeded**. Under
+the abandoned underwriting design a false `NOT_DELIVERED` cost the gate a purchase price; now it costs
+only a fee, and a false `DELIVERED_AS_ADVERTISED` earns one. The sole check on that is the receipt's
+commitment to `sha256(response)`. It is now in `WHAT_IS_MEASURED.md`, `SECURITY.md`, `README.md` and
+on the landing page.
+
+### Commands run
+
+| Command | Outcome |
+|---|---|
+| `pnpm --filter @quittance/gate build` | exit 0 |
+| Gate started, `/health`, `/quote` ×2, `/call` against a live seller | all as described above |
+| `node packages/verifier/dist/cli.js verify <gate receipt>` | **exit 0, RE-DERIVES** |
+| `pnpm --filter @quittance/web typecheck` | exit 0 |
+| `npx playwright test e2e/surfaces.spec.ts` after the copy rewrite | **7 passed** |
+
+### What still blocks G3
+
+A **funded buyer wallet that can sign EIP-712**, and a **KeeperHub API key**. Both are the owner's:
+the moment the gate holds a buyer wallet, P4 falls. With those two, G3 and G4 are a short step — the
+pipeline above already runs; only a valid payment and a configured executor are missing.

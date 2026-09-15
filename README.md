@@ -19,15 +19,15 @@ paid calls returned anything.
 ## Mechanism
 
 ```
-buyer agent  ->  quittance gate: hold signed discharge authorization
-             ->  call the live endpoint, pay its x402 requirement
+buyer agent  ->  quittance gate: hold signed fee authorization
+             ->  gate relays the BUYER's own x402 payment to the live endpoint
              ->  hash request, response, and the endpoint's advertised terms
              ->  verdict = f(advertised terms, observed response)      [pure]
-             ->  KeeperHub executes the discharge, or records a non-discharge
+             ->  KeeperHub executes the fee, or records a non-discharge
 ```
 
-In one sentence: **Quittance releases the buyer's payment only after the response has been checked
-against the requirements the endpoint itself advertised, and hands that settlement to KeeperHub.**
+In one sentence: **Quittance measures whether a paid endpoint delivered what it advertised, and
+charges for that measurement only when it did — with the charge executed by KeeperHub.**
 
 ## Links
 
@@ -54,8 +54,9 @@ run, and nothing else.
 
 | # | Evidence | Status | Where |
 |---|---|---|---|
-| 1 | First discharge, explorer link + KeeperHub run id | **not executed** — blocked, see limitations | — |
+| 1 | First fee executed through KeeperHub, explorer link + run id | **not executed** — needs a funded buyer wallet | — |
 | 2 | First recorded non-discharge against a live endpoint | **not executed** | — |
+| 2a | Full gate pipeline exercised against a live seller, receipt re-derived | **done, 2026-09-15** | `apps/gate`, verified with `quittance verify` |
 | 3 | Sustained campaign totals, failures included | **not run** | — |
 | 4 | Induced infrastructure failure survived | **not run** | — |
 | 5 | Receipt batch anchor tx | **not deployed** | — |
@@ -157,17 +158,19 @@ evidence/             probe runs, receipts, campaign output
 
 ## Limitations, and what is deliberately not claimed
 
-**The purchase leg currently has no compliant execution path to a third-party seller.** x402 requires
-the payer to produce an EIP-712 signature. KeeperHub's signing route pins the recipient to a
-KeeperHub workflow and refuses an arbitrary destination with `403 PAYTO_MISMATCH`, and this codebase
-forbids a local signer. This blocks the first live discharge against a third-party endpoint. Four
-costed options are recorded in [DECISIONS.md D-007](DECISIONS.md); the choice is the owner's and has
-not been made. **Nothing in this repository works around it.**
+**Quittance does not protect the buyer from a failed call.** The buyer pays the seller directly. If
+the endpoint fails to deliver, the buyer is out the purchase price and Quittance does not recover it.
+There is no dispute process, no arbitration, and no recovery. The only thing that changes on a failure
+is that **we are not paid** — we do not charge for measuring a failure. That must never be heard as
+"you are protected".
 
-**In gate mode the purchase leg is not KeeperHub-executed.** Only the discharge leg is. The seller's
-own facilitator broadcasts the purchase, which means Quittance would carry delivery risk on the
-buyer's behalf. That is underwriting, not escrow. There is no dispute process and no recovery of the
-purchase leg.
+**Only the fee leg is KeeperHub-executed.** The purchase leg is paid and signed by the buyer and
+broadcast by the seller's own facilitator. It is never described as a KeeperHub execution.
+
+**The gate is paid to say delivery succeeded.** It earns a fee on `DELIVERED_AS_ADVERTISED` and
+nothing on any other state. That incentive is real and is checked only by the receipt's commitment to
+`sha256(response)` — a buyer or seller holding the bytes can prove a mismatch. See
+[DECISIONS.md](DECISIONS.md) D-009, Cost 5.
 
 **The gate is a trusted observer of response content.** In gate mode it sees the plaintext request
 and response, and it is the only observer of the response bytes. It cannot lie undetectably — the

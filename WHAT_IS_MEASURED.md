@@ -100,23 +100,35 @@ were actually available for each endpoint, not merely the verdict.
 
 This distinction is the one most likely to be blurred in a demo. It is stated here so it cannot be.
 
-| Leg | Direction | Who executes it | KeeperHub-executed? |
-|---|---|---|---|
-| **Discharge leg** | Buyer → gate, in USDC | **KeeperHub**, from the buyer's pre-signed transfer authorization | **Yes.** This is the leg Quittance governs |
-| **Purchase leg** | Gate → seller, at the seller's advertised price | **The seller's own facilitator** | **No.** Never describe it as one |
+| Leg | Direction | Who pays | Who signs | KeeperHub-executed? |
+|---|---|---|---|---|
+| **Purchase** | Buyer → seller | the **buyer** | the buyer | **No.** The seller's own facilitator broadcasts it |
+| **Fee** | Buyer → gate | the buyer | the buyer, once, capped and nonced | **Yes.** Only on `DELIVERED_AS_ADVERTISED` |
 
-In gate mode the gate pays the seller from its own working capital first, then is discharged by the
-buyer only if the delivery check passes. That means:
+The gate is a **relay and an observer**. It never pays the seller and never signs anything.
 
-> **In gate mode, Quittance carries the delivery risk on the buyer's behalf. This is underwriting,
-> not escrow.** If the endpoint fails to deliver, the buyer is not discharged and the gate absorbs
-> the price of the call. There is no dispute process, no arbitration, and no recovery of the
-> purchase leg.
+> **Quittance does not carry delivery risk, and does not protect the buyer from a failed call.**
+> A buyer that pays for a call that does not deliver is out the purchase price, and Quittance does
+> not recover it. There is no dispute process, no arbitration, and no recovery.
+>
+> What Quittance offers is narrower: a delivery record anyone can re-derive, and a fee charged only
+> when delivery was structurally correct. **We do not charge you for measuring a failure.** That is
+> the whole of it, and it must never be heard as "you are protected".
 
-Facilitator mode (PRD §8.3) closes that gap by running the check before settlement. Its adoption
-status is reported as a fact, never as a plan.
+An earlier design had the gate front the purchase and be reimbursed on success — underwriting. It was
+abandoned because x402 requires the payer to produce an EIP-712 signature and the only path to chain
+available here refuses to sign to an arbitrary recipient. See `DECISIONS.md` D-007 and D-009.
 
----
+### The incentive this creates, stated against us
+
+The gate earns a fee on `DELIVERED_AS_ADVERTISED` and earns nothing on every other state. **It is
+therefore paid to say delivery succeeded.** Under the abandoned underwriting design a false
+`NOT_DELIVERED` cost the gate a purchase price; now it costs it only a fee, and a false
+`DELIVERED_AS_ADVERTISED` earns one.
+
+The only thing standing against that is the receipt's commitment to `sha256(response)`: a buyer or
+seller holding the bytes can prove a mismatch. That is the entire check on our incentive, and it
+requires someone to bother.
 
 ## The trusted-observer boundary
 

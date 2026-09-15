@@ -13,7 +13,7 @@ const NODES = [
   {
     id: "intent",
     title: "Buyer intent",
-    line: "Gate holds a pre-signed discharge authorization with a nonce, an expiry, and caps.",
+    line: "Gate holds a pre-signed fee authorization with a nonce, an expiry, and caps.",
     detail:
       "The buyer posts a target resource, a maximum price, a maximum latency, and a signed authorization. The caps are the buyer's own; nothing here is read from the seller.",
   },
@@ -27,9 +27,9 @@ const NODES = [
   {
     id: "call",
     title: "Call and hash",
-    line: "Pay the purchase leg, retry the request, hash request, response and terms.",
+    line: "Relay the buyer's own x402 payment, retry the request, hash request, response and terms.",
     detail:
-      "The purchase leg is broadcast by the seller's own facilitator. The receipt commits to sha256 of the response, sha256 of the request, and sha256 of the raw advertised terms, plus timings and the run context.",
+      "The BUYER pays the seller, signing with its own wallet; the gate relays and never signs. The seller's own facilitator broadcasts it. The receipt commits to sha256 of the response, sha256 of the request, and sha256 of the raw advertised terms, plus timings and the run context.",
   },
   {
     id: "verdict",
@@ -40,10 +40,10 @@ const NODES = [
   },
   {
     id: "settle",
-    title: "Discharge leg — KeeperHub-executed",
-    line: "Only DELIVERED_AS_ADVERTISED discharges. Every other state records a non-discharge.",
+    title: "Fee leg — KeeperHub-executed",
+    line: "Only DELIVERED_AS_ADVERTISED is charged for. Every other state records a non-discharge.",
     detail:
-      "The discharge leg, buyer to gate, is executed by KeeperHub from the pre-signed transfer authorization. The purchase leg, gate to seller, is NOT a KeeperHub execution: the seller's own facilitator broadcasts it. In gate mode the gate therefore carries delivery risk on the buyer's behalf. That is underwriting, not escrow.",
+      "The fee leg, buyer to gate, is executed by KeeperHub from the buyer's pre-signed authorization, keyed for idempotency by its nonce. The purchase leg is NOT a KeeperHub execution. The gate carries no delivery risk and does not protect the buyer: a call that fails leaves the buyer out the purchase price, and the only thing that changes is that we are not paid. Note the incentive this creates — the gate earns only when it reports delivery.",
   },
 ] as const;
 

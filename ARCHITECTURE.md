@@ -69,15 +69,18 @@ Only the first is discharge-eligible.
    authorization with a nonce and an expiry.
 2. Gate requests the resource, receives 402, parses `accepts[]`, and refuses if the advertised terms
    exceed the intent's caps → `REQUIREMENTS_MISMATCH`, **no purchase, no discharge**.
-3. Gate pays and retries the request from its KeeperHub-managed wallet.
+3. The **buyer** signs the x402 payment with its own wallet; the gate relays it and retries the
+   request. The gate does not pay the seller (D-009).
 4. Gate builds the receipt: advertised terms, request hash, response hash, timings, run context.
 5. `verdict()` runs **from the receipt alone**.
-6. On `DELIVERED_AS_ADVERTISED`, KeeperHub executes the discharge. Any other state records a
-   non-discharge with its reason and executes nothing.
+6. On `DELIVERED_AS_ADVERTISED`, KeeperHub executes the **fee** as a contract call, keyed for
+   idempotency by the authorization nonce. Any other state records a non-discharge with its reason
+   and executes nothing.
 7. Receipt is published and batched.
 
-Step 2 is the only step that can decline before money moves. Every later step is post-purchase, which
-is why gate mode is underwriting.
+Step 2 is the only step that can decline before money moves. Every later step is post-purchase — the
+buyer has already paid the seller by then, and Quittance does not recover that. What step 6 decides is
+only whether the gate is paid.
 
 ---
 
@@ -92,12 +95,14 @@ mode is labelled `PROJECT_BASELINE` — in the receipt, in the UI, and in `claim
 
 ---
 
-## The two legs
+## The two legs (as revised by D-009)
 
-| Leg | Direction | Executor | KeeperHub-executed |
-|---|---|---|---|
-| **Discharge** | Buyer → gate, USDC | **KeeperHub**, from the pre-signed transfer authorization | **Yes** |
-| **Purchase** | Gate → seller, advertised price | The seller's own facilitator | **No** |
+| Leg | Direction | Who pays and signs | Executor | KeeperHub-executed |
+|---|---|---|---|---|
+| **Purchase** | Buyer → seller, advertised price | the **buyer**, own wallet | The seller's own facilitator | **No** |
+| **Fee** | Buyer → gate, USDC | the buyer, pre-signed, capped and nonced | **KeeperHub** contract call | **Yes** |
+
+The gate relays and observes. It never pays the seller, never signs, and carries no delivery risk.
 
 ---
 

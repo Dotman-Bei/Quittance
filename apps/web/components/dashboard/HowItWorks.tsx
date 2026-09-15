@@ -14,18 +14,18 @@ import { Card, CardTitle } from "@/components/ui/Card";
 
 const LEGS = [
   {
-    leg: "Discharge",
-    direction: "Buyer → gate",
-    executor: "KeeperHub, from the buyer's pre-signed transfer authorization",
-    keeperhub: "Yes",
-    note: "The leg Quittance governs. Fires only on DELIVERED_AS_ADVERTISED.",
+    leg: "Purchase",
+    direction: "Buyer → seller",
+    executor: "The seller's own facilitator. Paid and signed by the BUYER",
+    keeperhub: "No",
+    note: "The gate relays it and never signs it. A failed call leaves the buyer out the purchase price; Quittance does not recover it.",
   },
   {
-    leg: "Purchase",
-    direction: "Gate → seller",
-    executor: "The seller's own facilitator",
-    keeperhub: "No",
-    note: "Never described as a KeeperHub execution, because it is not one.",
+    leg: "Fee",
+    direction: "Buyer → gate",
+    executor: "KeeperHub, from the buyer's pre-signed authorization",
+    keeperhub: "Yes",
+    note: "The leg Quittance governs. Charged only on DELIVERED_AS_ADVERTISED — we do not charge for measuring a failure.",
   },
 ] as const;
 
@@ -92,8 +92,8 @@ export function HowItWorks() {
               <VerdictBadge state={state} />
               <span className="num text-caption text-quiet">
                 {state === "DELIVERED_AS_ADVERTISED"
-                  ? "KeeperHub executes the discharge"
-                  : "no discharge — reason recorded"}
+                  ? "KeeperHub executes the fee"
+                  : "no fee charged — reason recorded"}
               </span>
             </li>
           ))}

@@ -590,3 +590,88 @@ underwriting story, which D-001 already recorded as a liability rather than a fe
 
 With that decision plus mainnet USDC and a KeeperHub API key, G3 and G4 are a day's work. Without it
 they are unreachable, and this entry is the record of why.
+
+---
+
+## D-009 · D-007 resolved: Option C. The legs are inverted · 2026-09-15 · active
+
+### What was decided
+
+**Owner decision, 2026-09-15: Option C.** D-007 is resolved. D-007 stays as written; this entry
+supersedes its open question.
+
+The buyer pays the seller **directly**, with its own x402 wallet. The gate never fronts capital. The
+gate observes the call, builds the receipt, runs the verdict, and — only on
+`DELIVERED_AS_ADVERTISED` — has KeeperHub execute a **conditional fee** from buyer to gate.
+
+```
+buyer agent  ->  quittance gate: hold signed fee authorization
+             ->  gate relays the buyer's own x402 payment to the live endpoint
+             ->  hash request, response, and the endpoint's advertised terms
+             ->  verdict = f(advertised terms, observed response)      [pure]
+             ->  KeeperHub executes the fee, or records a non-discharge
+```
+
+### The two legs, renamed honestly
+
+| Leg | Direction | Who pays | Who signs | Who executes | KeeperHub-executed |
+|---|---|---|---|---|---|
+| **Purchase** | Buyer → seller | the **buyer**, from its own wallet | the buyer | the seller's own facilitator | **No** |
+| **Fee** *(was "discharge")* | Buyer → gate | the buyer | the buyer, once, capped and nonced | **KeeperHub**, as a contract call | **Yes** |
+
+The gate is no longer in the purchase path as a payer. It is a **relay and an observer**.
+
+### Why this was the only option reachable in three days
+
+- **A** needed a KeeperHub operator action on someone else's timeline, with the deadline at 2026-09-18.
+- **B** would have made KeeperHub itself the live counterparty, changing the §2 answer entirely.
+- **D** would have ended property P4, which is quoted in the README, `SECURITY.md`, `AGENTS.md` §4
+  and the §2 requirements table.
+- **C** needs no permission, keeps a third-party live counterparty, and keeps KeeperHub as the only
+  path to chain for every transaction this codebase causes.
+
+### What survives unchanged
+
+Everything the project was actually built to prove.
+
+- `verdict()` is untouched. It never knew which leg produced its inputs.
+- The receipt, canonicalization, the leaf hash, and `packages/verifier` are untouched.
+- **KeeperHub is still the only path to chain** for us. P4 holds, not by a technicality: the buyer's
+  wallet is the buyer's, and no signer, write client or key enters `apps/` or `packages/`.
+- C-001, C-002, C-004, C-005, C-006 and C-007 all still mean what they said.
+- **C-003 still holds**: value moves through KeeperHub, triggered by a real call to a real live listed
+  endpoint. The value is now the fee rather than a reimbursement.
+- §2's "value movement, triggered by / consumed by / benefiting the project" is satisfied by the same
+  mechanism as before.
+
+### What it costs
+
+**Cost 1 — the underwriting story is gone, and with it the strongest version of the pitch.**
+Quittance no longer absorbs a failed call on the buyer's behalf. A buyer that pays for a call that
+does not deliver is still out the purchase price, and Quittance does not recover it. What Quittance
+now offers is narrower and true: **a delivery record anyone can re-derive, and a fee that is only
+charged when delivery was structurally correct.** We do not charge for measuring a failure.
+
+Every document that described underwriting must be corrected. D-001 Cost 1 described the underwriting
+exposure as a liability; removing it removes the liability and the claim together.
+
+**Cost 2 — the buyer keeps the delivery risk.** This is the honest version of the product and it is
+weaker than the original thesis. The README, `WHAT_IS_MEASURED.md` and the demo must say so in those
+words, and must not let "we only charge on delivery" be heard as "you are protected".
+
+**Cost 3 — the demo needs a funded buyer wallet that can sign EIP-712.** The buyer is now the payer
+for both legs, so the buyer must be able to sign. That wallet is the **owner's** to supply and fund;
+it is deliberately not ours, because the moment we hold it P4 falls. Our SDK accepts a signer the
+buyer provides and never holds one.
+
+**Cost 4 — "discharge" is now a slightly wrong word.** It is retained because
+`DELIVERED_AS_ADVERTISED` and the verdict enumeration are load-bearing across the receipt schema, the
+golden corpus and every document. Renaming the state would be a protocol change for a vocabulary
+improvement, three days out. The receipt records `dischargeTxHash` for the fee, and every surface
+says which leg it refers to.
+
+**Cost 5 — the gate could still lie, and now it is cheaper for it to do so.** Under underwriting, a
+false `NOT_DELIVERED` cost the gate the purchase price. Now a false `NOT_DELIVERED` costs the gate
+only its own fee, and a false `DELIVERED_AS_ADVERTISED` earns it one. The incentive to over-report
+delivery is new, and it is disclosed. The receipt still commits to `sha256(response)`, so a seller or
+buyer holding the bytes can disprove it — the recourse is unchanged, and it is the only recourse.

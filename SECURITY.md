@@ -12,7 +12,7 @@ claim sits at R0. Read this as the specification the implementation is measured 
 | Asset | Where it lives | Loss looks like |
 |---|---|---|
 | Buyer funds in flight | Pre-signed discharge authorization, capped and nonced | A discharge fires for a call that did not deliver |
-| Gate working capital | The gate's KeeperHub-managed Turnkey wallet | The purchase leg settles and delivery fails; the gate absorbs it (D-001, Cost 1) |
+| Gate fee revenue | Claimed only on `DELIVERED_AS_ADVERTISED` | A wrong verdict earns a fee that was not due, or forgoes one that was (D-009, Cost 5) |
 | Receipt integrity | `evidence/`, the batch root, the anchor contract | A published receipt is mutated after the fact and the verdict no longer re-derives |
 | KeeperHub credentials | Environment only, never source | An attacker can execute actions as us |
 
@@ -60,8 +60,10 @@ calls this is a real disclosure and it is the buyer's choice to make.
 verdict needs; the response body is discarded after the check. Receipts remain re-derivable given the
 response, which the buyer holds.
 
-**What the gate can lie about.** The response bytes, since it is the only observer of them. It
-cannot lie undetectably: the receipt commits to `sha256(response)` and to the advertised terms, so a
+**What the gate can lie about, and its incentive to.** The response bytes, since it is the only
+observer of them. Under D-009 the gate earns a fee on `DELIVERED_AS_ADVERTISED` and earns nothing
+otherwise, so it now has a direct incentive to over-report delivery. That incentive is new, it is
+disclosed, and it is bounded only by the commitment below. It cannot lie undetectably: the receipt commits to `sha256(response)` and to the advertised terms, so a
 seller that keeps its own logs can publish the response and prove a mismatch. **That is the whole
 recourse story, and it is a bounded one** — it requires the seller to have kept logs and to bother.
 

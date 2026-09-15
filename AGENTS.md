@@ -51,15 +51,19 @@ Properties of the chain that are not negotiable:
   `mimeType` match, schema conformance where the endpoint advertised one, and the declared latency
   budget. Semantic quality is not measured and is never claimed. See `WHAT_IS_MEASURED.md`.
 
-### The two legs, named honestly (PRD §5.3)
+### The two legs, named honestly (PRD §5.3, as revised by DECISIONS.md D-009)
 
-- **Discharge leg** — buyer to gate, USDC, **executed by KeeperHub** from the buyer's pre-signed
-  transfer authorization. This is the leg Quittance governs.
-- **Purchase leg** — gate to seller, at the seller's advertised price. In gate mode the seller's own
-  facilitator broadcasts this leg. It is **not** a KeeperHub execution and is never described as one.
+- **Purchase leg** — buyer to seller, at the seller's advertised price, **paid and signed by the
+  buyer from the buyer's own wallet**. The seller's own facilitator broadcasts it. It is **not** a
+  KeeperHub execution and is never described as one. The gate relays it and never signs it.
+- **Fee leg** — buyer to gate, **executed by KeeperHub** from the buyer's pre-signed authorization.
+  It fires only on `DELIVERED_AS_ADVERTISED`. This is the leg Quittance governs.
 
-In gate mode Quittance carries delivery risk on the buyer's behalf. It is underwriting, not escrow.
-Never write a line of copy, a comment, or a commit message that implies otherwise.
+**The gate does not carry delivery risk and does not underwrite anything.** A buyer that pays for a
+call that does not deliver is still out the purchase price, and Quittance does not recover it. What
+Quittance offers is narrower and true: a delivery record anyone can re-derive, and a fee charged only
+when delivery was structurally correct. Never write a line of copy, a comment, or a commit message
+that implies protection, recovery, or reimbursement.
 
 ---
 
