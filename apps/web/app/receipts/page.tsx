@@ -25,16 +25,16 @@ export default async function ReceiptsPage() {
   }));
 
   return (
-    <div className="grid gap-element">
+    <div className="grid gap-6">
       <div>
-        <h1 className="text-loud">Receipts</h1>
-        <p className="mt-2 max-w-3xl text-quiet">
+        <h1 className="text-stark">Receipts</h1>
+        <p className="mt-2 max-w-3xl text-muted">
           Every gated call, newest first. Non-discharges render identically to discharges:
           they are the record, not an error to dismiss. The verdict shown is re-derived
           here from each receipt&apos;s own committed inputs, not read from the file.
         </p>
         {unreadable > 0 ? (
-          <p className="num mt-2 text-caption text-accent">
+          <p className="num mt-2 text-xs text-volt">
             {unreadable} receipt files could not be read and were skipped. This ledger is
             partial.
           </p>

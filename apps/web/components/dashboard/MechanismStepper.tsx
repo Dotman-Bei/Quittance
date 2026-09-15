@@ -55,26 +55,26 @@ export function MechanismStepper() {
       {NODES.map((node, index) => {
         const open = openId === node.id;
         return (
-          <li key={node.id} className="rounded-default border border-rule bg-ink-raised">
+          <li key={node.id} className="rounded-2xl border border-edge glass-card">
             <button
               type="button"
               aria-expanded={open}
               onClick={() => setOpenId(open ? null : node.id)}
-              className="flex w-full items-baseline gap-4 px-element py-3 text-left"
+              className="flex w-full items-baseline gap-4 px-6 py-3 text-left"
             >
-              <span className="num text-caption text-quiet">
+              <span className="num text-xs text-muted">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="flex-1">
-                <span className="block text-loud">{node.title}</span>
-                <span className="block text-quiet">{node.line}</span>
+                <span className="block text-stark">{node.title}</span>
+                <span className="block text-muted">{node.line}</span>
               </span>
-              <span aria-hidden className="num text-caption text-quiet">
+              <span aria-hidden className="num text-xs text-muted">
                 {open ? "−" : "+"}
               </span>
             </button>
             {open ? (
-              <p className="border-t border-rule px-element py-3 text-plain">{node.detail}</p>
+              <p className="border-t border-edge px-6 py-3 text-frost">{node.detail}</p>
             ) : null}
           </li>
         );

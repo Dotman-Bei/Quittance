@@ -32,31 +32,31 @@ export default async function ReceiptPage({
   const { receipt, reDerived, agrees } = found;
 
   return (
-    <div className="grid gap-section">
-      <div className="grid gap-element">
-        <Link href="/receipts" className="text-caption text-quiet hover:text-loud">
+    <div className="grid gap-12">
+      <div className="grid gap-6">
+        <Link href="/receipts" className="text-xs text-muted hover:text-stark">
           ← All receipts
         </Link>
         <div className="flex flex-wrap items-center gap-3">
           <VerdictBadge state={reDerived} />
           {receipt.run.label === "THIRD_PARTY" ? null : (
-            <span className="num rounded-chip border border-secondary px-2 py-0.5 text-caption text-secondary">
+            <span className="num rounded-pill border border-electric px-2 py-0.5 text-xs text-electric">
               {receipt.run.label.replace("_", " ")}
             </span>
           )}
         </div>
-        <p className="max-w-3xl text-plain">{verdictMeaning(reDerived)}</p>
-        <p className="max-w-3xl text-caption text-quiet">
+        <p className="max-w-3xl text-frost">{verdictMeaning(reDerived)}</p>
+        <p className="max-w-3xl text-xs text-muted">
           {ATTRIBUTION_TEXT[attribution(reDerived)]}
         </p>
 
         {agrees ? null : (
           <Callout>
-            <p className="num text-loud">
+            <p className="num text-stark">
               This receipt does not re-derive. It publishes {receipt.publishedVerdict}; an
               independent re-derivation from its own committed inputs yields {reDerived}.
             </p>
-            <p className="mt-2 text-plain">
+            <p className="mt-2 text-frost">
               The mismatch is the finding. It is shown here as prominently as agreement
               would be.
             </p>
@@ -64,8 +64,8 @@ export default async function ReceiptPage({
         )}
       </div>
 
-      <section className="grid gap-element lg:grid-cols-2">
-        <div className="grid gap-element">
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6">
           <Card>
             <CardTitle>Structured facts</CardTitle>
             <dl className="mt-3 grid gap-2">
@@ -81,40 +81,40 @@ export default async function ReceiptPage({
                 ["Request sha256", receipt.request.requestSha256],
                 ["Retention", receipt.intent.retain === "none" ? "hash-only" : "full"],
               ].map(([term, value]) => (
-                <div key={term} className="border-b border-rule pb-2 last:border-0">
-                  <dt className="text-caption uppercase tracking-[0.12em] text-quiet">{term}</dt>
-                  <dd className="num mt-1 break-all text-plain">{value}</dd>
+                <div key={term} className="border-b border-edge pb-2 last:border-0">
+                  <dt className="text-xs uppercase tracking-[0.12em] text-muted">{term}</dt>
+                  <dd className="num mt-1 break-all text-frost">{value}</dd>
                 </div>
               ))}
             </dl>
           </Card>
         </div>
 
-        <div className="grid gap-element">
+        <div className="grid gap-6">
           <Card>
             <CardTitle>Execution</CardTitle>
             <dl className="mt-3 grid gap-2">
-              <div className="border-b border-rule pb-2">
-                <dt className="text-caption uppercase tracking-[0.12em] text-quiet">
+              <div className="border-b border-edge pb-2">
+                <dt className="text-xs uppercase tracking-[0.12em] text-muted">
                   KeeperHub run id
                 </dt>
-                <dd className="num mt-1 break-all text-plain">
+                <dd className="num mt-1 break-all text-frost">
                   {receipt.run.keeperhubRunId ?? "none recorded"}
                 </dd>
               </div>
-              <div className="border-b border-rule pb-2">
-                <dt className="text-caption uppercase tracking-[0.12em] text-quiet">
+              <div className="border-b border-edge pb-2">
+                <dt className="text-xs uppercase tracking-[0.12em] text-muted">
                   Discharge transaction
                 </dt>
-                <dd className="num mt-1 break-all text-plain">
+                <dd className="num mt-1 break-all text-frost">
                   {receipt.run.dischargeTxHash ?? "none — no discharge executed"}
                 </dd>
               </div>
               <div>
-                <dt className="text-caption uppercase tracking-[0.12em] text-quiet">
+                <dt className="text-xs uppercase tracking-[0.12em] text-muted">
                   Which leg KeeperHub executed
                 </dt>
-                <dd className="mt-1 text-plain">
+                <dd className="mt-1 text-frost">
                   The discharge leg only, buyer to gate. The purchase leg, gate to seller,
                   was broadcast by the seller&apos;s own facilitator and is not a KeeperHub
                   execution.
@@ -126,8 +126,8 @@ export default async function ReceiptPage({
         </div>
       </section>
 
-      <section className="grid gap-element">
-        <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">
+      <section className="grid gap-6">
+        <h2 className="text-xs uppercase tracking-[0.14em] text-muted">
           Advertised against observed
         </h2>
         <DiffTermsView
@@ -138,8 +138,8 @@ export default async function ReceiptPage({
         />
       </section>
 
-      <section className="grid gap-element">
-        <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">Canonical receipt</h2>
+      <section className="grid gap-6">
+        <h2 className="text-xs uppercase tracking-[0.14em] text-muted">Canonical receipt</h2>
         <ReceiptViewer receipt={receipt} />
       </section>
     </div>

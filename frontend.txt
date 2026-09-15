@@ -1,0 +1,153 @@
+// ============================================================================
+// VAULTORY LUXURY CYBER-FINTECH DESIGN SYSTEM & CODEBASE SPECIFICATION
+// FILE: frontend.txt
+// VERSION: 3.0.0 - PRODUCTION SPECIFICATION
+// ARCHITECTURE: React 18+ / Next.js 14+ / Vite + Tailwind CSS + shadcn/ui + TypeScript
+// ============================================================================
+
+[1. BRAND FOUNDATIONS & DESIGN DNA]
+--------------------------------------------------------------------------------
+Vaultory combines ultra-high-net-worth sovereign private banking with high-velocity
+decentralized finance. The visual tone is atmospheric, architectural, and razor-sharp:
+deep obsidian moss backgrounds, subtle luminous glass reflections, and high-frequency
+Volt Lime highlights that guide user focus toward capital velocity and actions.
+
+Core Brand Palette:
+- OBSIDIAN MOSS (Primary Base):   #1A1F0F  (Deepest backdrop, infinite canvas)
+- DEEP OLIVE (Secondary Surface): #2D3A1A  (Midtone elevation, gradients, borders)
+- NEON VOLT LIME (Brand Accent):   #C4FF0D  (Primary CTAs, active pills, yield highlights)
+- ELECTRIC GREEN (Gradient Stop): #8BC34A  (Coin glow depth, chart gains, transitions)
+- HIGH STARK WHITE:               #FFFFFF  (Display headers, primary text metrics)
+- FROST MUTED WHITE:              rgba(255, 255, 255, 0.70) (Body copy, subheaders)
+- GLASS HIGHLIGHT BORDER:         rgba(196, 255, 13, 0.25) (Luminous cyber borders)
+- AMBIENT RADIAL GLOW:            radial-gradient(circle, rgba(196, 255, 13, 0.15) 0%, transparent 70%)
+
+Surface Material Hierarchy:
+Level 0: Deep Obsidian Canvas (#1A1F0F with linear gradient to #2D3A1A)
+Level 1: Frosted Obsidian Glass (rgba(26, 31, 15, 0.75) + backdrop-blur-xl + 1px border)
+Level 2: Elevated Card Surface (rgba(255, 255, 255, 0.05) + hover border-[#C4FF0D]/40)
+Level 3: Highlight Interactive Active (rgba(196, 255, 13, 0.10) with #C4FF0D glow)
+
+[2. TAILWIND CSS CONFIGURATION EXTENSION]
+--------------------------------------------------------------------------------
+Add this configuration to your tailwind.config.js / tailwind.config.ts:
+
+module.exports = {
+  darkMode: ["class"],
+  content: ["./src/**/*.{ts,tsx,js,jsx}"],
+  theme: {
+    extend: {
+      colors: {
+        vaultory: {
+          dark: '#1A1F0F',
+          olive: '#2D3A1A',
+          volt: '#C4FF0D',
+          emerald: '#8BC34A',
+          glass: 'rgba(255, 255, 255, 0.05)',
+          'glass-border': 'rgba(196, 255, 13, 0.25)',
+        }
+      },
+      borderRadius: {
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+        '4xl': '2rem',
+        'pill': '9999px',
+      },
+      boxShadow: {
+        'volt-sm': '0 0 15px rgba(196, 255, 13, 0.20)',
+        'volt': '0 0 35px rgba(196, 255, 13, 0.35)',
+        'volt-lg': '0 0 70px rgba(196, 255, 13, 0.45)',
+        'glass-card': '0 20px 50px rgba(0, 0, 0, 0.45)',
+      },
+      animation: {
+        'float-slow': 'float 6s ease-in-out infinite',
+        'float-delayed': 'float 7s ease-in-out infinite 1.5s',
+        'pulse-glow': 'pulseGlow 8s ease-in-out infinite',
+        'marquee': 'marquee 30s linear infinite',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+          '50%': { transform: 'translateY(-16px) rotate(3deg)' },
+        },
+        pulseGlow: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '0.25' },
+          '50%': { transform: 'scale(1.2)', opacity: '0.45' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        }
+      }
+    }
+  }
+};
+
+[3. SHADCN/UI & TYPESCRIPT DIRECTORY CONVENTIONS]
+--------------------------------------------------------------------------------
+Standard project directory structure:
+/src
+  /components
+    /ui                   <-- REQUIRED: shadcn CLI generated primitives
+      button.tsx          <-- Volt-skinned buttons
+      dialog.tsx          <-- Frosted glass modal overlays
+      slider.tsx          <-- Staking duration & yield slider
+      input.tsx           <-- Glass backdrop inputs with #C4FF0D focus rings
+      badge.tsx           <-- High-contrast yield and network pills
+      tabs.tsx            <-- Segmented control triggers
+    /vaultory             <-- Domain-specific composite views
+      crypto-hero.tsx     <-- Flagship interactive hero with floating coins
+      navbar.tsx          <-- Multi-page brand navigation & wallet trigger
+      portfolio-card.tsx  <-- Live balance card with sparkline visualizer
+      swap-terminal.tsx   <-- Slippage, quote, and multi-asset DEX widget
+      staking-vault.tsx   <-- APY compounding engine & deposit triggers
+      token-ticker.tsx    <-- Continuous real-time price tape
+      modal-send.tsx      <-- Instant transaction dispatch dialog
+      modal-receive.tsx   <-- QR code generator & address copy module
+  /lib
+    utils.ts              <-- cn() clsx + tailwind-merge helper
+    tokens.ts             <-- Standardized asset definitions & mock prices
+  /styles
+    globals.css           <-- Tailwind directives & ambient radial glow utilities
+
+Why /components/ui is mandatory:
+1. Official shadcn CLI ('npx shadcn@latest add ...') writes directly to /components/ui.
+2. Isolates headless unstyled primitives (Radix UI) from bespoke domain branding.
+3. Enables predictable tree-shaking, multi-developer collaboration, and zero import breakage.
+
+[4. CORE BRAND COMPONENT RECIPES]
+--------------------------------------------------------------------------------
+
+A. VAULTORY LOGO MARK:
+<div className="flex items-center gap-2.5 cursor-pointer select-none">
+  <div className="w-8 h-8 rounded-xl bg-[#C4FF0D] flex items-center justify-center text-black font-black text-base shadow-[0_0_20px_rgba(196,255,13,0.5)]">
+    V
+  </div>
+  <span className="text-xl font-bold tracking-tight text-white font-sans">
+    Vaultory
+  </span>
+</div>
+
+B. PRIMARY NEON VOLT BUTTON:
+<button className="bg-[#C4FF0D] hover:bg-[#b5f005] active:scale-95 text-black font-semibold text-sm px-6 py-2.5 rounded-lg transition-all duration-200 shadow-[0_0_25px_rgba(196,255,13,0.35)] hover:shadow-[0_0_40px_rgba(196,255,13,0.6)]">
+  Get Started
+</button>
+
+C. FROSTED GLASS CONTAINER:
+<div className="bg-white/5 backdrop-blur-xl border border-[rgba(196,255,13,0.2)] rounded-3xl p-6 shadow-2xl hover:border-[#C4FF0D]/40 transition-all">
+  ...content
+</div>
+
+D. FLOATING COIN TOKENS:
+<div className="w-16 h-16 rounded-full flex items-center justify-center font-black text-xl text-black bg-gradient-to-br from-[#C4FF0D] to-[#8BC34A] shadow-[0_10px_35px_rgba(196,255,13,0.4)] animate-float-slow">
+  ₿
+</div>
+
+[5. MULTI-PAGE APPLICATION ARCHITECTURE]
+--------------------------------------------------------------------------------
+1. LANDING / HERO: Dynamic floating crypto coins, radial glow, value proposition, institutional audits.
+2. WALLET / PORTFOLIO: Total balance metrics, asset breakdown (BTC/ETH/SOL/USDT/VT), live SVG area chart, Send/Receive modals.
+3. SWAP & TRADE: Instant DEX quoting, slippage tolerance, gas estimation, balance deduction simulation.
+4. VAULTS & STAKING: APY yield simulator (Daily, Monthly, Annualized), vault selector, locked/flexible terms.
+5. DESIGN SYSTEM PLAYGROUND: Live color tokens with 1-click hex copy, button matrix, typography scale, glass card anatomy.
+6. FRONTEND.TXT EXPORTER: Instant browser copy and one-click direct file download via Blob.

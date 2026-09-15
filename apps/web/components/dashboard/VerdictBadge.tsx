@@ -56,13 +56,19 @@ export function attribution(state: VerdictState): "seller" | "operator" | "buyer
   }
 }
 
+/*
+ * DECISIONS.md D-013. Every state renders through the SAME `.verdict-chip` class with no
+ * per-state variant. Volt Lime is the brand accent and never encodes a verdict: a green
+ * "delivered" badge would tell a reader the answer before they read it, which is the one
+ * thing this product must not do. The signal is the label and the glyph.
+ */
 export function VerdictBadge({ state }: { state: VerdictState }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-chip border border-rule bg-ink-sunken px-2 py-0.5">
-      <span aria-hidden className="num text-plain">
+    <span className="verdict-chip">
+      <span aria-hidden className="num text-frost">
         {glyph(state)}
       </span>
-      <span className="num text-caption tracking-wide text-loud">{state}</span>
+      <span className="num text-xs tracking-wide">{state}</span>
     </span>
   );
 }

@@ -27,15 +27,15 @@ export function Tabs({
             type="button"
             aria-selected={selected}
             onClick={() => onSelect(item.id)}
-            className={`num rounded-chip border px-2.5 py-1 text-caption tracking-wide transition-colors ${
+            className={`num rounded-pill border px-2.5 py-1 text-xs tracking-wide transition-colors ${
               selected
-                ? "border-accent bg-accent-quiet text-accent"
-                : "border-rule text-quiet hover:border-rule-strong hover:text-plain"
+                ? "border-volt bg-surface-3 text-volt"
+                : "border-edge text-muted hover:border-edge-strong hover:text-frost"
             }`}
           >
             {item.label}
             {item.count === undefined ? null : (
-              <span className="ml-1.5 text-quiet">{item.count}</span>
+              <span className="ml-1.5 text-muted">{item.count}</span>
             )}
           </button>
         );

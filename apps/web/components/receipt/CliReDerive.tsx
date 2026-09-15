@@ -25,25 +25,25 @@ export function CliReDerive({ leaf }: { leaf: string }) {
   };
 
   return (
-    <div className="rounded-default border border-rule bg-ink-sunken">
-      <div className="flex items-center justify-between border-b border-rule px-3 py-2">
-        <span className="text-caption uppercase tracking-[0.12em] text-quiet">
+    <div className="rounded-2xl border border-edge bg-sunken">
+      <div className="flex items-center justify-between border-b border-edge px-3 py-2">
+        <span className="text-xs uppercase tracking-[0.12em] text-muted">
           Re-derive this receipt yourself
         </span>
         <button
           type="button"
           onClick={copy}
-          className="num rounded-chip border border-rule px-2 py-0.5 text-caption text-quiet hover:border-rule-strong hover:text-loud"
+          className="num rounded-pill border border-edge px-2 py-0.5 text-xs text-muted hover:border-edge-strong hover:text-stark"
         >
           {copied ? "COPIED" : "COPY"}
         </button>
       </div>
-      <pre className="overflow-x-auto px-3 py-3 text-plain">
+      <pre className="overflow-x-auto px-3 py-3 text-frost">
         <code>{command}</code>
       </pre>
-      <p className="border-t border-rule px-3 py-2 text-caption text-quiet">
+      <p className="border-t border-edge px-3 py-2 text-xs text-muted">
         Runs from a fresh clone with no account and no API key. Add{" "}
-        <code className="text-plain">--body &lt;file&gt;</code> to check the receipt&apos;s
+        <code className="text-frost">--body &lt;file&gt;</code> to check the receipt&apos;s
         sha256 commitment to the response bytes.
       </p>
     </div>

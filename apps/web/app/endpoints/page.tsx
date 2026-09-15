@@ -9,10 +9,10 @@ export default async function EndpointsPage() {
   const endpoints = summariseEndpoints(receipts);
 
   return (
-    <div className="grid gap-element">
+    <div className="grid gap-6">
       <div>
-        <h1 className="text-loud">Endpoints</h1>
-        <p className="mt-2 max-w-3xl text-quiet">
+        <h1 className="text-stark">Endpoints</h1>
+        <p className="mt-2 max-w-3xl text-muted">
           Delivery records computed from receipts, not from seller-reported metadata. An
           endpoint page that hides its failures is the product failing, so non-discharges
           are shown in full. Below {SAMPLE_FLOOR} gated calls no percentage is shown.
@@ -20,25 +20,25 @@ export default async function EndpointsPage() {
       </div>
 
       {endpoints.length === 0 ? (
-        <div className="rounded-default border border-rule bg-ink-raised p-element">
-          <p className="num text-loud">no endpoints yet</p>
-          <p className="mt-2 text-quiet">
+        <div className="rounded-2xl border border-edge glass-card p-6">
+          <p className="num text-stark">no endpoints yet</p>
+          <p className="mt-2 text-muted">
             No endpoint has been called. This repository is at phase P1 and nothing has been
             called live, so there is no delivery record to compute.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-default border border-rule">
+        <div className="overflow-x-auto rounded-2xl border border-edge">
           <table className="hash-cell w-full border-collapse text-left">
             <caption className="sr-only">Endpoints by gated call count</caption>
             <thead>
-              <tr className="border-b border-rule-strong bg-ink-sunken">
+              <tr className="border-b border-edge-strong bg-sunken">
                 {["Host", "Gated calls", "Third party", "Discharged", "Checks available"].map(
                   (h) => (
                     <th
                       key={h}
                       scope="col"
-                      className="px-3 py-2 text-caption uppercase tracking-[0.12em] text-quiet"
+                      className="px-3 py-2 text-xs uppercase tracking-[0.12em] text-muted"
                     >
                       {h}
                     </th>
@@ -48,23 +48,23 @@ export default async function EndpointsPage() {
             </thead>
             <tbody>
               {endpoints.map((e) => (
-                <tr key={e.host} className="border-b border-rule last:border-0">
+                <tr key={e.host} className="border-b border-edge last:border-0">
                   <th scope="row" className="px-3 py-3 text-left font-normal">
                     <Link
                       href={`/endpoints/${encodeURIComponent(e.host)}`}
-                      className="num text-plain hover:text-loud"
+                      className="num text-frost hover:text-stark"
                     >
                       {e.host}
                     </Link>
                   </th>
-                  <td className="num px-3 py-3 text-plain">{e.calls}</td>
-                  <td className="num px-3 py-3 text-plain">{e.thirdPartyCalls}</td>
-                  <td className="num px-3 py-3 text-plain">
+                  <td className="num px-3 py-3 text-frost">{e.calls}</td>
+                  <td className="num px-3 py-3 text-frost">{e.thirdPartyCalls}</td>
+                  <td className="num px-3 py-3 text-frost">
                     {e.calls < SAMPLE_FLOOR
                       ? "INSUFFICIENT SAMPLE"
                       : `${e.byState.DELIVERED_AS_ADVERTISED} of ${e.calls}`}
                   </td>
-                  <td className="px-3 py-3 text-caption text-quiet">
+                  <td className="px-3 py-3 text-xs text-muted">
                     {[
                       e.checksAvailable.mimeType ? "mimeType" : null,
                       e.checksAvailable.schema ? "schema" : null,

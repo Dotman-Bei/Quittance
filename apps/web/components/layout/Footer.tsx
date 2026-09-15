@@ -31,11 +31,11 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    <footer className="mt-section border-t border-rule">
-      <div className="mx-auto grid max-w-page gap-element px-6 py-section sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="mt-12 border-t border-edge">
+      <div className="mx-auto grid max-w-[1280px] gap-6 px-6 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <p className="num text-body font-semibold tracking-[0.18em] text-loud">QUITTANCE</p>
-          <p className="mt-3 max-w-xs text-quiet">
+          <p className="num text-sm font-semibold tracking-[0.18em] text-stark">QUITTANCE</p>
+          <p className="mt-3 max-w-xs text-muted">
             Settles a payment for a paid endpoint only after the response has been checked
             against the requirements that endpoint itself advertised.
           </p>
@@ -43,13 +43,13 @@ export function Footer() {
 
         {COLUMNS.map((column) => (
           <div key={column.heading}>
-            <p className="text-caption uppercase tracking-[0.14em] text-quiet">
+            <p className="text-xs uppercase tracking-[0.14em] text-muted">
               {column.heading}
             </p>
             <ul className="mt-3 space-y-2">
               {column.links.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href} className="text-plain hover:text-loud">
+                  <Link href={link.href} className="text-frost hover:text-stark">
                     {link.label}
                   </Link>
                 </li>
@@ -59,8 +59,8 @@ export function Footer() {
         ))}
 
         <div>
-          <p className="text-caption uppercase tracking-[0.14em] text-quiet">Status</p>
-          <ul className="mt-3 space-y-2 text-quiet">
+          <p className="text-xs uppercase tracking-[0.14em] text-muted">Status</p>
+          <ul className="mt-3 space-y-2 text-muted">
             <li>
               Network and execution-service status render from probe output. The probes are
               not implemented, so nothing is asserted here.
@@ -69,8 +69,8 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-rule">
-        <p className="mx-auto max-w-page px-6 py-6 text-caption leading-relaxed text-quiet">
+      <div className="border-t border-edge">
+        <p className="mx-auto max-w-[1280px] px-6 py-6 text-xs leading-relaxed text-muted">
           A deterministic, structural delivery ledger. Not a quality assessment, and not a
           financial assurance of any kind. Structural conformance is a low bar: an endpoint
           can pass every check here while returning content that is useless to the buyer.

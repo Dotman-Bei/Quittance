@@ -24,8 +24,8 @@ export function SummaryStats({
     return (
       <Card featured>
         <CardTitle>Live evidence</CardTitle>
-        <p className="num mt-3 text-loud">no runs yet</p>
-        <p className="mt-3 text-quiet">
+        <p className="num mt-3 text-stark">no runs yet</p>
+        <p className="mt-3 text-muted">
           Nothing has been executed. Every claim in the ledger sits at rung R0, asserted in
           a document. This panel fills in from the receipt corpus and shows nothing until
           there is something to show.
@@ -55,16 +55,16 @@ export function SummaryStats({
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardTitle>Third-party gated calls</CardTitle>
-        <p className="num mt-2 text-2xl text-loud">{thirdParty.length}</p>
-        <p className="mt-2 text-caption text-quiet">
+        <p className="num mt-2 text-2xl text-stark">{thirdParty.length}</p>
+        <p className="mt-2 text-xs text-muted">
           Counted separately from our own endpoint. Never summed into a headline.
         </p>
       </Card>
 
       <Card>
         <CardTitle>Discharged, third party</CardTitle>
-        <p className="num mt-2 text-2xl text-loud">{rate}</p>
-        <p className="mt-2 text-caption text-quiet">
+        <p className="num mt-2 text-2xl text-stark">{rate}</p>
+        <p className="mt-2 text-xs text-muted">
           {discharged} discharged of {thirdParty.length}. Below {SAMPLE_FLOOR} calls no
           percentage is shown.
         </p>
@@ -72,16 +72,16 @@ export function SummaryStats({
 
       <Card>
         <CardTitle>PROJECT_BASELINE calls</CardTitle>
-        <p className="num mt-2 text-2xl text-loud">{baseline.length}</p>
-        <p className="mt-2 text-caption text-quiet">
+        <p className="num mt-2 text-2xl text-stark">{baseline.length}</p>
+        <p className="mt-2 text-xs text-muted">
           Our own endpoint. Not third-party adoption and not market demand.
         </p>
       </Card>
 
       <Card>
         <CardTitle>Our failures</CardTitle>
-        <p className="num mt-2 text-2xl text-loud">{operator}</p>
-        <p className="mt-2 text-caption text-quiet">
+        <p className="num mt-2 text-2xl text-stark">{operator}</p>
+        <p className="mt-2 text-xs text-muted">
           Gate errors and settlement failures. Never folded into any endpoint&apos;s
           delivery record.
         </p>
@@ -91,7 +91,7 @@ export function SummaryStats({
         <div className="sm:col-span-2 lg:col-span-4">
           <Card>
             <CardTitle>Corpus notes</CardTitle>
-            <ul className="mt-2 space-y-1 text-quiet">
+            <ul className="mt-2 space-y-1 text-muted">
               {fixture.length > 0 ? (
                 <li className="num">LOCAL FIXTURE rows in corpus: {fixture.length}</li>
               ) : null}
@@ -101,7 +101,7 @@ export function SummaryStats({
                 </li>
               ) : null}
               {disagreements > 0 ? (
-                <li className="num text-accent">
+                <li className="num text-volt">
                   Receipts whose published verdict does not re-derive: {disagreements}
                 </li>
               ) : null}

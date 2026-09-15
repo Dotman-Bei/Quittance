@@ -840,3 +840,71 @@ do, but a non-conforming one is unsupported rather than guessed at. The failure 
 **Cost 3 — the purchase leg keeps the weakness on purpose.** A seller advertising a wrong domain
 still causes a failed purchase. That is the seller's own facilitator rejecting the seller's own
 payment, and it surfaces honestly as a delivery failure rather than being papered over.
+
+---
+
+## D-013 · Vaultory visual system adopted; the no-green rule is replaced, not dropped · 2026-09-15 · active
+
+### What was decided
+
+The owner removed **PRD §18** and supplied `frontend.txt` — the *Vaultory* luxury cyber-fintech
+design system. Its visual language is adopted for `apps/web`. Two judgement calls, both stated here
+so they can be reversed knowingly:
+
+**1. The product stays named Quittance.** The instruction was to use the branding "to perfectly fit
+this build", which reads as re-skinning this product rather than replacing it. Renaming to Vaultory
+two days before submission would contradict the README, `claims.json`, `docs/submission.md`, every
+decision entry, and the narrative attached to two live mainnet transactions. The **visual system** is
+adopted; the **name and surfaces** are Quittance's.
+
+**2. Nothing from the Vaultory feature set is built.** `frontend.txt` describes a wallet, a DEX swap
+terminal, an APY staking simulator with mock prices, and a portfolio with simulated balances.
+Quittance has no wallet, executes no swaps, and pays no yield. Building those would mean shipping
+fabricated financial figures, which §0.7 forbids and which D-003 already refused once for the same
+reason. The surfaces remain: overview, receipts, endpoints, verify.
+
+### The green problem, and why the rule survives its own deletion
+
+The Vaultory palette is built on **Volt Lime `#C4FF0D`** and **Electric Green `#8BC34A`**. Deleted
+§18 said "No green anywhere in the palette. There is no pass badge."
+
+The rule and its reason were not the same thing. The **reason** was: *a discharge and a non-discharge
+must be rendered with the same weight, distinguished by label, not by reassurance.* Green was banned
+because green means "pass", and a verdict rendered green tells the reader it is fine before they have
+read it.
+
+That reason still holds, and §9 still states it independently: *"Non-discharge receipts render
+identically, with the reason code, and are never styled as errors to be dismissed."*
+
+So the rule becomes:
+
+> **Volt Lime is the brand accent, used for navigation, focus, and primary actions — never to encode
+> a verdict.** No verdict state has a colour of its own. All seven render in the same neutral
+> treatment, distinguished by label and glyph.
+
+Green used *everywhere* carries no signal about any particular outcome. Green used *only on
+`DELIVERED_AS_ADVERTISED`* would carry exactly the signal §18 was protecting against. The first is
+adopted; the second stays forbidden.
+
+### Enforcement changed to match
+
+`scripts/claim-verify.mjs` and the Playwright suite enforced "no green in the palette". That check
+now passes trivially or fails wrongly, so it is **replaced rather than removed**: both now assert
+that **no verdict state is distinguished by colour** — every `VerdictBadge` renders identical classes
+regardless of state. That is the property that mattered; the colour ban was a proxy for it.
+
+### What it costs
+
+**Cost 1 — a reader may still infer reassurance from a lime-accented page.** A page that glows is a
+page that looks confident, and this product's whole claim is that confidence should come from
+re-derivation rather than presentation. The honest-state copy — "no runs yet", `INSUFFICIENT SAMPLE`,
+the misleading list — is unchanged and now has to work harder against a more persuasive surface.
+
+**Cost 2 — the deleted §18 took its typographic and spacing discipline with it.** Body 14px, caption
+10px, radii 8/2/12, container 1280px, one signature motif, the `prefers-reduced-motion` guard. Of
+these only the reduced-motion guard is independently required (accessibility), and it is kept.
+`frontend.txt` specifies its own radii and animation set, which are adopted in their place.
+
+**Cost 3 — the design intent now lives in two places.** `frontend.txt` for the visual system,
+`DESIGN.md` for how it is constrained by the product's honesty rules. Neither alone is sufficient,
+and a future reader must know both. D-003 recorded the same split against the old spec.

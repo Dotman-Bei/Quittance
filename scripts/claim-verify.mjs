@@ -60,8 +60,19 @@ function walk(dir) {
   return out;
 }
 
-// §18: no green anywhere in the palette. There is no pass badge.
-const GREEN_RE = /\b(?:bg|text|border|ring|from|to|via|fill|stroke)-(?:green|emerald|lime|teal)-\d{2,3}\b|\bcolou?r:\s*green\b/i;
+/*
+ * DECISIONS.md D-013. The old check banned green outright. That was a PROXY for the rule
+ * that actually matters — a verdict must not be distinguished by colour — and the Vaultory
+ * palette is built on Volt Lime, so the proxy now fails for the wrong reason.
+ *
+ * The real rule is enforced directly: no verdict state name may appear on a line that also
+ * sets a colour. Volt Lime is free to be the brand accent everywhere it does not sit beside
+ * a verdict.
+ */
+const VERDICT_NAMES =
+  /\b(DELIVERED_AS_ADVERTISED|NOT_DELIVERED|SHAPE_MISMATCH|TIMEOUT_EXCEEDED|REQUIREMENTS_MISMATCH|GATE_ERROR|SETTLEMENT_FAILED)\b/;
+const COLOUR_CLASS =
+  /\b(?:bg|text|border|ring|from|via|shadow)-(?:volt|electric|green|emerald|lime|teal|rose|red|amber|indigo|violet|cyan)(?:-\d{2,3})?\b/;
 
 for (const file of walk(join(ROOT, "apps/web"))) {
   const text = readFileSync(file, "utf8");
@@ -71,7 +82,11 @@ for (const file of walk(join(ROOT, "apps/web"))) {
     if (line.trimStart().startsWith("*") || line.trimStart().startsWith("//")) return;
     const m = VOCAB_RE.exec(line);
     if (m) problems.push(`${rel}:${i + 1}: forbidden vocabulary "${m[1]}" in a UI string (§18)`);
-    if (GREEN_RE.test(line)) problems.push(`${rel}:${i + 1}: green in the palette (§18) — there is no pass badge`);
+    if (VERDICT_NAMES.test(line) && COLOUR_CLASS.test(line)) {
+      problems.push(
+        `${rel}:${i + 1}: a verdict state is styled with a colour. No verdict may be distinguished by colour (D-013) — label and glyph carry the signal.`,
+      );
+    }
   });
 }
 
@@ -86,4 +101,4 @@ const byRung = {};
 for (const c of ledger.claims) byRung[c.currentRung] = (byRung[c.currentRung] ?? 0) + 1;
 console.log(`claim:verify OK — ${ledger.claims.length} claims`);
 console.log(`  rungs: ${Object.entries(byRung).map(([r, n]) => `${r}=${n}`).join(" ")}`);
-console.log(`  no forbidden vocabulary, no green in the palette`);
+console.log(`  no forbidden vocabulary, no verdict distinguished by colour`);

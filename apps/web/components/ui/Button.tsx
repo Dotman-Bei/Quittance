@@ -1,18 +1,19 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import Link from "next/link";
 
-type Variant = "primary" | "quiet";
+/* frontend.txt §4B — the primary Volt button, and a glass secondary. */
+type Variant = "volt" | "glass";
 
 const BASE =
-  "inline-flex items-center gap-2 rounded-default border px-3 py-1.5 text-body transition-colors";
+  "inline-flex items-center gap-2 rounded-2xl px-6 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:active:scale-100";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "border-accent bg-accent-quiet text-accent hover:bg-accent hover:text-ink",
-  quiet: "border-rule bg-transparent text-plain hover:border-rule-strong hover:text-loud",
+  volt: "bg-volt text-black hover:bg-[#b5f005] shadow-volt-sm hover:shadow-volt",
+  glass: "bg-surface-2 text-stark border border-edge-volt backdrop-blur-xl hover:border-volt/40",
 };
 
 export function Button({
-  variant = "quiet",
+  variant = "glass",
   className = "",
   ...rest
 }: ComponentPropsWithoutRef<"button"> & { variant?: Variant }) {
@@ -21,7 +22,7 @@ export function Button({
 
 export function ButtonLink({
   href,
-  variant = "quiet",
+  variant = "glass",
   children,
   className = "",
 }: {

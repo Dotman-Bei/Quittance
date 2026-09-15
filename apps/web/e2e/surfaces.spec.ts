@@ -4,28 +4,41 @@
 import { test, expect } from "@playwright/test";
 import { seeded } from "./seeded";
 
-test.describe("§18 palette and weight", () => {
-  test("no green is used anywhere on the rendered pages", async ({ page }) => {
-    for (const path of ["/", "/receipts", "/endpoints", "/verify"]) {
-      await page.goto(path);
-      const greens = await page.evaluate(() => {
-        const hits: string[] = [];
-        for (const el of Array.from(document.querySelectorAll("*"))) {
-          const s = getComputedStyle(el);
-          for (const prop of ["color", "backgroundColor", "borderTopColor"] as const) {
-            const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s[prop]);
-            if (m === null) continue;
-            const r = Number(m[1]);
-            const g = Number(m[2]);
-            const b = Number(m[3]);
-            // Green-dominant and saturated enough to read as a "pass" colour.
-            if (g > 90 && g - r > 40 && g - b > 40) hits.push(`${prop}=${s[prop]}`);
-          }
-        }
-        return hits;
+test.describe("D-013 palette and weight", () => {
+  /*
+   * DECISIONS.md D-013. The old test scanned computed styles for green. The Vaultory
+   * palette is built on Volt Lime, so that proxy is gone and the rule it stood in for is
+   * asserted directly: a discharge and a non-discharge must render IDENTICALLY.
+   */
+  test("no verdict state is distinguished by colour", async ({ page }) => {
+    const { dischargedLeaf, notDeliveredLeaf } = seeded();
+
+    const styleOf = async (leaf: string, state: string) => {
+      await page.goto(`/receipts/${leaf}`);
+      const badge = page.getByText(state, { exact: true }).first();
+      await expect(badge).toBeVisible();
+      const chip = badge.locator("xpath=..");
+      return chip.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return [s.color, s.backgroundColor, s.borderTopColor, s.borderRadius].join(" | ");
       });
-      expect(greens, `green found on ${path}`).toEqual([]);
-    }
+    };
+
+    const delivered = await styleOf(dischargedLeaf, "DELIVERED_AS_ADVERTISED");
+    const notDelivered = await styleOf(notDeliveredLeaf, "NOT_DELIVERED");
+    expect(notDelivered).toBe(delivered);
+  });
+
+  test("the brand accent never lands on a verdict chip", async ({ page }) => {
+    const { dischargedLeaf } = seeded();
+    await page.goto(`/receipts/${dischargedLeaf}`);
+    const chip = page.getByText("DELIVERED_AS_ADVERTISED", { exact: true }).first().locator("xpath=..");
+    const colours = await chip.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return [s.color, s.backgroundColor, s.borderTopColor];
+    });
+    /* Volt Lime is rgb(196, 255, 13). It may brand the page; it may not brand a verdict. */
+    for (const c of colours) expect(c).not.toContain("196, 255, 13");
   });
 
   test("every verdict state is spelled out in full, never abbreviated to a symbol", async ({

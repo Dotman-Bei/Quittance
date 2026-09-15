@@ -403,27 +403,6 @@ check fails the build if an address literal appears in `apps/` or `packages/`.
 
 ---
 
-## 18. Design Requirements
-
-Tokens live in one `@theme` block, copied from this section, with `§18` cited in the CSS comment.
-
-- Deep ink base, one warm accent, one muted secondary for callouts. Neutral ramp named in plain
-  words.
-- **No green anywhere in the palette.** There is no pass badge. A discharge and a non-discharge are
-  rendered with the same weight, distinguished by label, not by reassurance.
-- Monospace for every number, `tabular-nums` and `tnum` on.
-- Body 14px, caption 10px. Section spacing 48px, element 24px. Radii 8 default, 2 chip, 12 featured.
-  Container 1280px.
-- One signature motif, used once.
-- `prefers-reduced-motion` guard at the top of `globals.css`. Focus rings 2px accent, 2px offset,
-  keyboard only.
-- Every CSS workaround carries a comment naming the browser mechanism it works around.
-
-A schema validator rejects the words guaranteed, safe, trustless, refund, insured, and verified
-quality in any claim or UI string, as a backstop against the product lying by accident.
-
----
-
 ## 19. Documentation Requirements
 
 `README.md` follows the spine: name, plain-language problem, ASCII mechanism block, links line,

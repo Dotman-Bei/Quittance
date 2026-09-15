@@ -11,13 +11,13 @@ export function ReceiptViewer({ receipt }: { receipt: ReceiptType }) {
   const canonical = canonicalJson(receipt);
 
   return (
-    <div className="rounded-default border border-rule bg-ink-sunken">
-      <div className="border-b border-rule px-3 py-2">
-        <span className="text-caption uppercase tracking-[0.12em] text-quiet">
+    <div className="rounded-2xl border border-edge bg-sunken">
+      <div className="border-b border-edge px-3 py-2">
+        <span className="text-xs uppercase tracking-[0.12em] text-muted">
           Canonical receipt — the exact pre-image of the leaf hash
         </span>
       </div>
-      <pre className="max-h-[32rem] overflow-auto px-3 py-3 text-caption leading-relaxed text-plain">
+      <pre className="max-h-[32rem] overflow-auto px-3 py-3 text-xs leading-relaxed text-frost">
         <code>{canonical}</code>
       </pre>
     </div>

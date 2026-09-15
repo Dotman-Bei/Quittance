@@ -34,12 +34,12 @@ export default async function OverviewPage() {
   }));
 
   return (
-    <div className="grid gap-section">
-      <section className="grid gap-element">
-        <h1 className="max-w-3xl text-2xl leading-snug text-loud">
+    <div className="grid gap-12">
+      <section className="grid gap-6">
+        <h1 className="max-w-3xl text-2xl leading-snug text-stark">
           Delivery measured at the moment of delivery, by something that is not the seller.
         </h1>
-        <div className="max-w-3xl space-y-3 text-plain">
+        <div className="max-w-3xl space-y-3 text-frost">
           <p>
             Agents already pay per call over x402. Nothing measures whether the call was
             answered.
@@ -56,34 +56,34 @@ export default async function OverviewPage() {
         {/* §18 the one signature motif, used once, on this page only. */}
         <div className="signature-rule" aria-hidden />
         <div className="flex flex-wrap gap-2">
-          <ButtonLink href="/verify" variant="primary">
+          <ButtonLink href="/verify" variant="volt">
             Re-derive a receipt
           </ButtonLink>
           <ButtonLink href="/receipts">Open the ledger</ButtonLink>
         </div>
       </section>
 
-      <section className="grid gap-element">
-        <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">Live evidence</h2>
+      <section className="grid gap-6">
+        <h2 className="text-xs uppercase tracking-[0.14em] text-muted">Live evidence</h2>
         <SummaryStats receipts={receipts} unreadable={unreadable} />
       </section>
 
-      <section id="mechanism" className="grid gap-element">
-        <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">Mechanism</h2>
+      <section id="mechanism" className="grid gap-6">
+        <h2 className="text-xs uppercase tracking-[0.14em] text-muted">Mechanism</h2>
         <MechanismStepper />
       </section>
 
-      <section id="how-it-works" className="grid gap-element">
-        <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">How it works</h2>
+      <section id="how-it-works" className="grid gap-6">
+        <h2 className="text-xs uppercase tracking-[0.14em] text-muted">How it works</h2>
         <HowItWorks />
       </section>
 
-      <section className="grid gap-element">
+      <section className="grid gap-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">
+          <h2 className="text-xs uppercase tracking-[0.14em] text-muted">
             Evidence ledger
           </h2>
-          <Link href="/receipts" className="text-caption text-quiet hover:text-loud">
+          <Link href="/receipts" className="text-xs text-muted hover:text-stark">
             All receipts
           </Link>
         </div>

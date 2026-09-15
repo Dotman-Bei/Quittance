@@ -38,7 +38,7 @@ export function Drawer({
         type="button"
         aria-label="Close panel"
         onClick={onClose}
-        className="absolute inset-0 bg-ink/80"
+        className="absolute inset-0 bg-obsidian/80"
       />
       <div
         ref={panelRef}
@@ -46,14 +46,14 @@ export function Drawer({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative h-full w-full max-w-2xl overflow-y-auto border-l border-rule bg-ink-raised p-element"
+        className="relative h-full w-full max-w-2xl overflow-y-auto border-l border-edge glass-card p-6"
       >
-        <div className="mb-element flex items-start justify-between gap-4">
-          <h2 className="num text-caption uppercase tracking-[0.14em] text-quiet">{title}</h2>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <h2 className="num text-xs uppercase tracking-[0.14em] text-muted">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="num rounded-chip border border-rule px-2 py-0.5 text-caption text-quiet hover:border-rule-strong hover:text-loud"
+            className="num rounded-pill border border-edge px-2 py-0.5 text-xs text-muted hover:border-edge-strong hover:text-stark"
           >
             CLOSE
           </button>

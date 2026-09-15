@@ -34,7 +34,7 @@ export type EvidenceRow = {
 function LabelChip({ label }: { label: string }) {
   if (label === "THIRD_PARTY") return null;
   return (
-    <span className="num ml-2 rounded-chip border border-secondary px-1.5 py-0.5 text-caption text-secondary">
+    <span className="num ml-2 rounded-pill border border-electric px-1.5 py-0.5 text-xs text-electric">
       {label.replace("_", " ")}
     </span>
   );
@@ -78,7 +78,7 @@ export function EvidenceTable({
   }, [rows, filter, query]);
 
   return (
-    <div className="grid gap-element">
+    <div className="grid gap-6">
       <div className="grid gap-3">
         <label htmlFor="ledger-search" className="sr-only">
           Filter by endpoint host, receipt hash, or run id
@@ -88,34 +88,34 @@ export function EvidenceTable({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Filter by host, receipt hash, or KeeperHub run id"
-          className="num w-full rounded-default border border-rule bg-ink-sunken px-3 py-2 text-plain placeholder:text-quiet"
+          className="num w-full rounded-2xl border border-edge bg-sunken px-3 py-2 text-frost placeholder:text-muted"
         />
         <Tabs items={tabs} active={filter} onSelect={setFilter} label="Filter by verdict state" />
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-default border border-rule bg-ink-raised p-element">
-          <p className="num text-loud">no runs yet</p>
-          <p className="mt-2 text-quiet">{emptyReason}</p>
+        <div className="rounded-2xl border border-edge glass-card p-6">
+          <p className="num text-stark">no runs yet</p>
+          <p className="mt-2 text-muted">{emptyReason}</p>
         </div>
       ) : visible.length === 0 ? (
-        <div className="rounded-default border border-rule bg-ink-raised p-element">
-          <p className="num text-loud">No runs match this filter.</p>
-          <p className="mt-2 text-quiet">
+        <div className="rounded-2xl border border-edge glass-card p-6">
+          <p className="num text-stark">No runs match this filter.</p>
+          <p className="mt-2 text-muted">
             {rows.length} receipts are in the ledger. None matches the current filter.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-default border border-rule">
+        <div className="overflow-x-auto rounded-2xl border border-edge">
           <table className="hash-cell w-full border-collapse text-left">
             <caption className="sr-only">Gated calls, newest first</caption>
             <thead>
-              <tr className="border-b border-rule-strong bg-ink-sunken">
+              <tr className="border-b border-edge-strong bg-sunken">
                 {["Started", "Verdict", "Endpoint", "Amount", "Latency", "Proof", ""].map((h) => (
                   <th
                     key={h}
                     scope="col"
-                    className="px-3 py-2 text-caption uppercase tracking-[0.12em] text-quiet"
+                    className="px-3 py-2 text-xs uppercase tracking-[0.12em] text-muted"
                   >
                     {h}
                   </th>
@@ -124,12 +124,12 @@ export function EvidenceTable({
             </thead>
             <tbody>
               {visible.map((row) => (
-                <tr key={row.leaf} className="border-b border-rule align-top last:border-0">
-                  <td className="num px-3 py-3 text-caption text-quiet">{row.startedAt}</td>
+                <tr key={row.leaf} className="border-b border-edge align-top last:border-0">
+                  <td className="num px-3 py-3 text-xs text-muted">{row.startedAt}</td>
                   <td className="px-3 py-3">
                     <VerdictBadge state={row.state} />
                     {row.agrees ? null : (
-                      <p className="num mt-1 text-caption text-accent">
+                      <p className="num mt-1 text-xs text-volt">
                         published {row.publishedState}; does not re-derive
                       </p>
                     )}
@@ -137,20 +137,20 @@ export function EvidenceTable({
                   <td className="px-3 py-3">
                     <Link
                       href={`/endpoints/${encodeURIComponent(row.host)}`}
-                      className="num text-plain hover:text-loud"
+                      className="num text-frost hover:text-stark"
                     >
                       {row.host}
                     </Link>
                     <LabelChip label={row.label} />
                   </td>
-                  <td className="num px-3 py-3 text-plain">{row.amountAtomic}</td>
-                  <td className="num px-3 py-3 text-plain">
+                  <td className="num px-3 py-3 text-frost">{row.amountAtomic}</td>
+                  <td className="num px-3 py-3 text-frost">
                     {row.latencyMs}ms
-                    <span className="block text-caption text-quiet">
+                    <span className="block text-xs text-muted">
                       buyer cap {row.maxLatencyMs}ms
                     </span>
                   </td>
-                  <td className="num px-3 py-3 text-caption text-quiet">
+                  <td className="num px-3 py-3 text-xs text-muted">
                     <span className="block">run {row.runId ?? "none recorded"}</span>
                     <span className="block">
                       {row.txHash === null ? "no discharge tx" : row.txHash}
@@ -160,7 +160,7 @@ export function EvidenceTable({
                     <button
                       type="button"
                       onClick={() => setInspecting(row)}
-                      className="num rounded-chip border border-rule px-2 py-0.5 text-caption text-quiet hover:border-rule-strong hover:text-loud"
+                      className="num rounded-pill border border-edge px-2 py-0.5 text-xs text-muted hover:border-edge-strong hover:text-stark"
                     >
                       INSPECT
                     </button>
@@ -178,10 +178,10 @@ export function EvidenceTable({
         title="Receipt summary"
       >
         {inspecting === null ? null : (
-          <div className="grid gap-element">
+          <div className="grid gap-6">
             <div>
               <VerdictBadge state={inspecting.state} />
-              <p className="mt-3 text-plain">{verdictMeaning(inspecting.state)}</p>
+              <p className="mt-3 text-frost">{verdictMeaning(inspecting.state)}</p>
             </div>
             <dl className="grid gap-2">
               {[
@@ -199,15 +199,15 @@ export function EvidenceTable({
                   }, no latency SLA (x402 advertises none)`,
                 ],
               ].map(([term, value]) => (
-                <div key={term} className="border-b border-rule pb-2">
-                  <dt className="text-caption uppercase tracking-[0.12em] text-quiet">{term}</dt>
-                  <dd className="num mt-1 break-all text-plain">{value}</dd>
+                <div key={term} className="border-b border-edge pb-2">
+                  <dt className="text-xs uppercase tracking-[0.12em] text-muted">{term}</dt>
+                  <dd className="num mt-1 break-all text-frost">{value}</dd>
                 </div>
               ))}
             </dl>
             <Link
               href={`/receipts/${inspecting.leaf}`}
-              className="num rounded-default border border-accent bg-accent-quiet px-3 py-1.5 text-center text-caption uppercase tracking-[0.12em] text-accent"
+              className="num rounded-2xl border border-volt bg-surface-3 px-3 py-1.5 text-center text-xs uppercase tracking-[0.12em] text-volt"
             >
               Open full receipt
             </Link>

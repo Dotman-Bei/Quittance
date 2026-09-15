@@ -22,14 +22,14 @@ export default async function EndpointPage({
 
   if (record === undefined) {
     return (
-      <div className="grid gap-element">
-        <Link href="/endpoints" className="text-caption text-quiet hover:text-loud">
+      <div className="grid gap-6">
+        <Link href="/endpoints" className="text-xs text-muted hover:text-stark">
           ← All endpoints
         </Link>
-        <h1 className="num text-loud">{host}</h1>
-        <div className="rounded-default border border-rule bg-ink-raised p-element">
-          <p className="num text-loud">no gated calls recorded</p>
-          <p className="mt-2 text-quiet">
+        <h1 className="num text-stark">{host}</h1>
+        <div className="rounded-2xl border border-edge glass-card p-6">
+          <p className="num text-stark">no gated calls recorded</p>
+          <p className="mt-2 text-muted">
             No receipt in the ledger names this host. That is not a statement about the
             endpoint; it means we have not called it.
           </p>
@@ -43,16 +43,16 @@ export default async function EndpointPage({
   const belowFloor = sellerAttributed < SAMPLE_FLOOR;
 
   return (
-    <div className="grid gap-section">
-      <div className="grid gap-element">
-        <Link href="/endpoints" className="text-caption text-quiet hover:text-loud">
+    <div className="grid gap-12">
+      <div className="grid gap-6">
+        <Link href="/endpoints" className="text-xs text-muted hover:text-stark">
           ← All endpoints
         </Link>
-        <h1 className="num text-loud">{host}</h1>
+        <h1 className="num text-stark">{host}</h1>
         {belowFloor ? (
           <Callout>
-            <p className="num text-loud">INSUFFICIENT SAMPLE ({sellerAttributed} calls)</p>
-            <p className="mt-2 text-plain">
+            <p className="num text-stark">INSUFFICIENT SAMPLE ({sellerAttributed} calls)</p>
+            <p className="mt-2 text-frost">
               Fewer than {SAMPLE_FLOOR} gated calls attributable to this endpoint. Counts are
               shown; no rate is computed, because a rate over this many calls would be noise
               presented as a measurement.
@@ -64,18 +64,18 @@ export default async function EndpointPage({
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardTitle>Gated calls</CardTitle>
-          <p className="num mt-2 text-2xl text-loud">{record.calls}</p>
+          <p className="num mt-2 text-2xl text-stark">{record.calls}</p>
         </Card>
         <Card>
           <CardTitle>Third party</CardTitle>
-          <p className="num mt-2 text-2xl text-loud">{record.thirdPartyCalls}</p>
-          <p className="mt-2 text-caption text-quiet">
+          <p className="num mt-2 text-2xl text-stark">{record.thirdPartyCalls}</p>
+          <p className="mt-2 text-xs text-muted">
             {record.baselineCalls} PROJECT_BASELINE calls excluded from this figure.
           </p>
         </Card>
         <Card>
           <CardTitle>Discharged</CardTitle>
-          <p className="num mt-2 text-2xl text-loud">
+          <p className="num mt-2 text-2xl text-stark">
             {belowFloor
               ? String(record.byState.DELIVERED_AS_ADVERTISED)
               : `${((record.byState.DELIVERED_AS_ADVERTISED / sellerAttributed) * 100).toFixed(1)}%`}
@@ -83,15 +83,15 @@ export default async function EndpointPage({
         </Card>
         <Card>
           <CardTitle>First seen</CardTitle>
-          <p className="num mt-2 text-plain">{record.firstSeen ?? "unknown"}</p>
+          <p className="num mt-2 text-frost">{record.firstSeen ?? "unknown"}</p>
         </Card>
       </section>
 
-      <section className="grid gap-element">
-        <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">
+      <section className="grid gap-6">
+        <h2 className="text-xs uppercase tracking-[0.14em] text-muted">
           Reason codes
         </h2>
-        <p className="max-w-3xl text-quiet">
+        <p className="max-w-3xl text-muted">
           Every state, including the ones with a count of zero. A record that lists only its
           successes is not a record.
         </p>
@@ -99,21 +99,21 @@ export default async function EndpointPage({
           {VERDICT_STATES.map((state) => (
             <li
               key={state}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-default border border-rule bg-ink-raised px-element py-3"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-edge glass-card px-6 py-3"
             >
               <VerdictBadge state={state} />
-              <span className="num text-plain">{record.byState[state]}</span>
+              <span className="num text-frost">{record.byState[state]}</span>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="grid gap-element">
-        <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">
+      <section className="grid gap-6">
+        <h2 className="text-xs uppercase tracking-[0.14em] text-muted">
           Checks available for this endpoint
         </h2>
         <Card>
-          <ul className="grid gap-2 text-plain">
+          <ul className="grid gap-2 text-frost">
             <li className="num">
               content type: {record.checksAvailable.mimeType ? "advertised" : "NOT advertised"}
             </li>
@@ -122,7 +122,7 @@ export default async function EndpointPage({
             </li>
             <li className="num">latency SLA: none — x402 advertises no response deadline</li>
           </ul>
-          <p className="mt-3 text-caption text-quiet">
+          <p className="mt-3 text-xs text-muted">
             Comparing this endpoint&apos;s rate against one checked on more dimensions would
             compare two different measurements. Where neither a content type nor a schema was
             advertised, the check is status code plus non-empty body, and nothing more.
@@ -130,11 +130,11 @@ export default async function EndpointPage({
         </Card>
       </section>
 
-      <section className="grid gap-element">
-        <h2 className="text-caption uppercase tracking-[0.14em] text-quiet">Our failures</h2>
+      <section className="grid gap-6">
+        <h2 className="text-xs uppercase tracking-[0.14em] text-muted">Our failures</h2>
         <Card>
-          <p className="num text-2xl text-loud">{record.operatorAttributed}</p>
-          <p className="mt-2 text-quiet">
+          <p className="num text-2xl text-stark">{record.operatorAttributed}</p>
+          <p className="mt-2 text-muted">
             Gate errors and settlement failures on calls to this host. These are ours, not
             this endpoint&apos;s, and they are excluded from every figure above except the
             raw gated-call count.

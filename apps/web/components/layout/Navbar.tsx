@@ -22,13 +22,17 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-rule">
+    <header className="sticky top-0 z-50 px-4 pt-4">
       <nav
         aria-label="Primary"
-        className="mx-auto flex max-w-page flex-wrap items-center gap-x-6 gap-y-3 px-6 py-4"
+        className="glass mx-auto flex max-w-[1280px] flex-wrap items-center gap-x-6 gap-y-3 rounded-pill px-6 py-3"
       >
-        <Link href="/" className="num text-body font-semibold tracking-[0.18em] text-loud">
-          QUITTANCE
+        {/* frontend.txt §4A logo mark, carrying this product's initial. */}
+        <Link href="/" className="flex select-none items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-volt text-base font-black text-black shadow-volt-sm">
+            Q
+          </span>
+          <span className="text-xl font-bold tracking-tight text-stark">Quittance</span>
         </Link>
 
         <ul className="flex flex-wrap gap-1.5">
@@ -40,10 +44,10 @@ export function Navbar() {
                 <Link
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
-                  className={`num inline-block rounded-chip border px-2.5 py-1 text-caption uppercase tracking-[0.12em] transition-colors ${
+                  className={`inline-block rounded-pill px-3.5 py-1.5 text-sm font-medium transition-all ${
                     active
-                      ? "border-accent bg-accent-quiet text-accent"
-                      : "border-transparent text-quiet hover:text-plain"
+                      ? "bg-surface-3 text-volt shadow-volt-sm"
+                      : "text-frost/70 hover:text-stark"
                   }`}
                 >
                   {tab.label}
@@ -56,7 +60,7 @@ export function Navbar() {
         <div className="ml-auto">
           <Link
             href="/verify"
-            className="num rounded-default border border-rule px-3 py-1.5 text-caption uppercase tracking-[0.12em] text-plain hover:border-rule-strong hover:text-loud"
+            className="rounded-2xl bg-volt px-5 py-2 text-sm font-semibold text-black shadow-volt-sm transition-all hover:shadow-volt active:scale-95"
           >
             Re-derive a receipt
           </Link>

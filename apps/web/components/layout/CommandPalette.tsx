@@ -49,13 +49,13 @@ export function CommandPalette() {
         type="button"
         aria-label="Close search"
         onClick={() => setOpen(false)}
-        className="absolute inset-0 bg-ink/80"
+        className="absolute inset-0 bg-obsidian/80"
       />
       <form
         onSubmit={submit}
-        className="relative w-full max-w-xl rounded-featured border border-rule-strong bg-ink-raised p-element"
+        className="relative w-full max-w-xl rounded-3xl border border-edge-strong glass-card p-6"
       >
-        <label htmlFor="palette" className="text-caption uppercase tracking-[0.14em] text-quiet">
+        <label htmlFor="palette" className="text-xs uppercase tracking-[0.14em] text-muted">
           Receipt hash or endpoint host
         </label>
         {/* eslint-disable-next-line jsx-a11y/no-autofocus -- the palette exists to take focus */}
@@ -65,9 +65,9 @@ export function CommandPalette() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="sha256 leaf, or a host name"
-          className="num mt-3 w-full rounded-default border border-rule bg-ink-sunken px-3 py-2 text-plain placeholder:text-quiet"
+          className="num mt-3 w-full rounded-2xl border border-edge bg-sunken px-3 py-2 text-frost placeholder:text-muted"
         />
-        <p className="mt-3 text-caption text-quiet">
+        <p className="mt-3 text-xs text-muted">
           Enter to open. Escape to dismiss.
         </p>
       </form>

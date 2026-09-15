@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 /*
- * §18 prefers-reduced-motion guard at the top of globals.css.
- * Placed before every other rule, as §18 requires.
+ * prefers-reduced-motion guard, first, before any other rule.
+ *
+ * frontend.txt specifies float, pulse-glow and marquee animations. None of them may run
+ * for a reader who has asked for stillness, and the guard has to come first so nothing
+ * declared later escapes it.
  */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -16,53 +19,78 @@
 }
 
 /*
- * §18 design tokens. One @theme block, copied from §18 via DESIGN.md.
+ * Design tokens — the Vaultory system from frontend.txt, adopted per DECISIONS.md D-013.
  *
- * Deep ink base, ONE warm accent, ONE muted secondary for callouts.
- * Neutral ramp named in plain words.
- * NO GREEN ANYWHERE. There is no pass badge: a discharge and a non-discharge are
- * rendered with the same weight, distinguished by label, not by reassurance.
+ * ONE RULE CONSTRAINS IT, and it is the reason the old palette banned green outright:
+ * Volt Lime is the BRAND accent — navigation, focus, primary actions. It NEVER encodes a
+ * verdict. No verdict state has a colour of its own; all seven render in the same neutral
+ * treatment, distinguished by label and glyph. A green "delivered" badge would tell a
+ * reader the answer before they read it, which is the one thing this product must not do.
  */
 @theme {
-  /* Ground and surfaces */
-  --color-ink: #0b0b0d;
-  --color-ink-raised: #141417;
-  --color-ink-sunken: #08080a;
+  /* Brand foundations — frontend.txt §1 */
+  --color-obsidian: #1a1f0f;
+  --color-olive: #2d3a1a;
+  --color-volt: #c4ff0d;
+  --color-electric: #8bc34a;
 
-  /* Rules */
-  --color-rule: #22222a;
-  --color-rule-strong: #34343f;
+  /* Surface material hierarchy — frontend.txt §1, levels 0 to 3 */
+  --color-surface-1: rgba(26, 31, 15, 0.75);
+  --color-surface-2: rgba(255, 255, 255, 0.05);
+  --color-surface-3: rgba(196, 255, 13, 0.1);
+  --color-sunken: #12160b;
 
-  /* Neutral text ramp, named in plain words */
-  --color-quiet: #7c7c88;
-  --color-plain: #b6b6c0;
-  --color-loud: #f2f2f5;
+  /* Borders */
+  --color-edge: rgba(255, 255, 255, 0.08);
+  --color-edge-strong: rgba(255, 255, 255, 0.16);
+  --color-edge-volt: rgba(196, 255, 13, 0.25);
 
-  /* The one warm accent */
-  --color-accent: #d98a3d;
-  --color-accent-quiet: #2a1e12;
+  /* Text ramp */
+  --color-stark: #ffffff;
+  --color-frost: rgba(255, 255, 255, 0.7);
+  --color-muted: rgba(255, 255, 255, 0.45);
 
-  /* The one muted secondary, for callouts only */
-  --color-secondary: #6b7a99;
+  /* Radii — frontend.txt §2 */
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+  --radius-pill: 9999px;
 
-  /* §18 body 14px, caption 10px */
-  --text-caption: 0.625rem;
-  --text-body: 0.875rem;
+  /* Glow — frontend.txt §2 */
+  --shadow-volt-sm: 0 0 15px rgba(196, 255, 13, 0.2);
+  --shadow-volt: 0 0 35px rgba(196, 255, 13, 0.35);
+  --shadow-volt-lg: 0 0 70px rgba(196, 255, 13, 0.45);
+  --shadow-glass-card: 0 20px 50px rgba(0, 0, 0, 0.45);
 
-  /* §18 section spacing 48px, element 24px */
-  --spacing-element: 1.5rem;
-  --spacing-section: 3rem;
-
-  /* §18 radii 8 default, 2 chip, 12 featured */
-  --radius-chip: 2px;
-  --radius-default: 8px;
-  --radius-featured: 12px;
-
-  /* §18 container 1280px */
   --container-page: 1280px;
-
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Animation — frontend.txt §2 */
+  --animate-float-slow: float 6s ease-in-out infinite;
+  --animate-pulse-glow: pulseGlow 8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(3deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.45;
+  }
 }
 
 html {
@@ -70,15 +98,51 @@ html {
 }
 
 body {
-  background-color: var(--color-ink);
-  color: var(--color-plain);
+  /* Level 0: deep obsidian canvas with a gradient to olive. */
+  background-color: var(--color-obsidian);
+  background-image: linear-gradient(160deg, #1a1f0f 0%, #20280f 55%, #2d3a1a 100%);
+  background-attachment: fixed;
+  color: var(--color-frost);
   font-family: var(--font-sans);
-  font-size: var(--text-body);
+  font-size: 0.875rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-/* §18 monospace for every number, tabular-nums and tnum on. */
+/* Ambient radial glow — frontend.txt §1. Decorative, and behind everything. */
+.ambient-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 70% 45% at 50% -10%,
+    rgba(196, 255, 13, 0.15) 0%,
+    transparent 70%
+  );
+}
+
+/* Level 1: frosted obsidian glass. */
+.glass {
+  background-color: var(--color-surface-1);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-edge);
+  box-shadow: var(--shadow-glass-card);
+}
+
+/* Level 2: elevated card, lifting toward volt on hover. */
+.glass-card {
+  background-color: var(--color-surface-2);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-edge-volt);
+  box-shadow: var(--shadow-glass-card);
+  transition: border-color 200ms ease;
+}
+.glass-card:hover {
+  border-color: rgba(196, 255, 13, 0.4);
+}
+
+/* Monospace for every number, tabular so columns align. */
 .num,
 code,
 pre,
@@ -88,9 +152,9 @@ kbd {
   font-feature-settings: "tnum" 1;
 }
 
-/* §18 focus rings 2px accent, 2px offset, keyboard only. */
+/* Focus rings: volt, 2px, 2px offset, keyboard only. */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-volt);
   outline-offset: 2px;
 }
 :focus:not(:focus-visible) {
@@ -98,27 +162,24 @@ kbd {
 }
 
 /*
- * §18 the ONE signature motif, used ONCE: a single hairline rule that runs the width
- * of the page beneath the masthead, broken by one accent segment at the point where
- * the verdict sits in the mechanism chain. It appears on the landing page only.
+ * The verdict chip. Every state renders through THIS ONE CLASS, with no per-state
+ * variant, so colour cannot encode an outcome. See DECISIONS.md D-013.
  */
-.signature-rule {
-  height: 1px;
-  background-image: linear-gradient(
-    to right,
-    var(--color-rule) 0%,
-    var(--color-rule) 58%,
-    var(--color-accent) 58%,
-    var(--color-accent) 64%,
-    var(--color-rule) 64%,
-    var(--color-rule) 100%
-  );
+.verdict-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-edge-strong);
+  background-color: rgba(255, 255, 255, 0.04);
+  padding: 0.125rem 0.625rem;
+  color: var(--color-stark);
 }
 
 /*
- * Workaround: Safari and older Chromium do not apply `overflow-wrap: anywhere` to
- * table cells whose layout is `auto`, so long sha256 strings force horizontal page
- * scroll. Fixing the layout algorithm to `fixed` restores wrapping inside the cell.
+ * Workaround: Safari and older Chromium do not apply `overflow-wrap: anywhere` to table
+ * cells under `table-layout: auto`, so a sha256 string forces the page to scroll
+ * sideways. Fixing the layout algorithm restores wrapping inside the cell.
  */
 .hash-cell {
   table-layout: fixed;
