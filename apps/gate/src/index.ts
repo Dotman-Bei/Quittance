@@ -17,7 +17,18 @@ const app = new Hono();
 const EVIDENCE_DIR =
   process.env["QUITTANCE_EVIDENCE_DIR"] ?? join(process.cwd(), "..", "..", "evidence", "receipts");
 
-const QuoteBody = z.object({ url: z.string(), intent: BuyerIntent });
+const QuoteBody = z.object({
+  url: z.string(),
+  intent: BuyerIntent,
+  /* An explicit override wins over the seller's declaration. */
+  requestShape: z
+    .object({
+      method: z.string().optional(),
+      body: z.string().nullable().optional(),
+      contentType: z.string().nullable().optional(),
+    })
+    .optional(),
+});
 
 const FeeAuthorizationBody = z.object({
   asset: z.string(),
@@ -71,6 +82,8 @@ app.post("/quote", async (c) => {
   const { quote: q } = result;
   return c.json({
     quoteId: q.quoteId,
+    url: q.url,
+    requestShape: q.requestShape,
     advertised: q.advertised,
     rawPaymentRequired: q.rawPaymentRequired,
     note: "Sign this payment with your own wallet and POST it to /call. The gate never signs and never pays the seller.",

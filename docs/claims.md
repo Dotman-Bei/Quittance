@@ -18,13 +18,13 @@ in the same commit or neither lands.
 
 ## Current state
 
-**7 claims — R0=6 · R1=1**
+**7 claims — R0=5 · R1=1 · R2=1**
 
 | id | Claim | Now | Target | Phase | Gates |
 |---|---|---|---|---|---|
 | C-001 | A discharge fires only on DELIVERED_AS_ADVERTISED | **R1** | R4 | P1 | G2 |
 | C-002 | Any stranger can re-derive a published verdict from the receipt and the chain | **R0** | R4 | P1 | G2, G7 |
-| C-003 | Value moved through KeeperHub, triggered by a call to a live listed endpoint | **R0** | R3 | P2 | G3 |
+| C-003 | Value moved through KeeperHub, triggered by a call to a live listed endpoint | **R2** | R3 | P2 | G3 |
 | C-004 | Non-delivery against a live endpoint was recorded and the discharge did not execute | **R0** | R2 | P2 | G4 |
 | C-005 | A duplicate settlement attempt does not produce a second discharge | **R0** | R3 | P3 | G10 |
 | C-006 | The system survived an induced infrastructure failure and recovered | **R0** | R2 | P3 | G6 |
@@ -60,12 +60,16 @@ in the same commit or neither lands.
 
 ### C-003 — Value moved through KeeperHub, triggered by a call to a live listed endpoint
 
-**Rung:** R0 (target R3) · **Phase:** P2
+**Rung:** R2 (target R3) · **Phase:** P2
 **Kill criteria in scope:** K1, K2, K5
 
-**Evidence:** none. This claim is asserted in a document and nothing more.
+**Evidence:**
 
-**Notes.** Discharge leg only. The purchase leg is broadcast by the seller's own facilitator and is not a KeeperHub execution (D-001).
+- `node internal/buyer/run.mjs <live x402 resource>` — reaches R2
+  - `evidence/receipts/f8f949d34582fadc525d28ea8e49cc0f1c45d4ea58acd4d8bfb2d9740a5d14e3.json`
+  - First fee executed through KeeperHub on Base mainnet, triggered by a gated call to api.onesource.io, a live third-party x402 resource listed in the public discovery index. Transaction 0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852, block 51349475, status SUCCESS, verified against Base mainnet independently of KeeperHub. Both logs emitted by the real Base USDC contract: AuthorizationUsed (EIP-3009 nonce consumed, authorizer = buyer) and Transfer of 100 atomic USDC from buyer to gate. 24 such transactions now exist across 23 distinct third-party hosts.
+
+**Notes.** R2 reached. R3 requires a sustained window with failures included in the published count (G5). Per D-009 the value that moves is the conditional FEE, buyer to gate; the purchase leg is paid by the buyer directly and is not a KeeperHub execution. KeeperHub broadcast via a SPONSORED relayer, so msg.sender is KeeperHub's relayer rather than our organisation wallet — the submission must describe it that way.
 
 ### C-004 — Non-delivery against a live endpoint was recorded and the discharge did not execute
 

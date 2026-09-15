@@ -71,7 +71,7 @@
     {
       "id": "C-003",
       "claim": "Value moved through KeeperHub, triggered by a call to a live listed endpoint",
-      "currentRung": "R0",
+      "currentRung": "R2",
       "targetRung": "R3",
       "status": "asserted",
       "phase": "P2",
@@ -83,8 +83,16 @@
         "K2",
         "K5"
       ],
-      "evidence": [],
-      "notes": "Discharge leg only. The purchase leg is broadcast by the seller's own facilitator and is not a KeeperHub execution (D-001)."
+      "evidence": [
+        {
+          "kind": "onchain",
+          "command": "node internal/buyer/run.mjs <live x402 resource>",
+          "path": "evidence/receipts/f8f949d34582fadc525d28ea8e49cc0f1c45d4ea58acd4d8bfb2d9740a5d14e3.json",
+          "reaches": "R2",
+          "detail": "First fee executed through KeeperHub on Base mainnet, triggered by a gated call to api.onesource.io, a live third-party x402 resource listed in the public discovery index. Transaction 0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852, block 51349475, status SUCCESS, verified against Base mainnet independently of KeeperHub. Both logs emitted by the real Base USDC contract: AuthorizationUsed (EIP-3009 nonce consumed, authorizer = buyer) and Transfer of 100 atomic USDC from buyer to gate. 24 such transactions now exist across 23 distinct third-party hosts."
+        }
+      ],
+      "notes": "R2 reached. R3 requires a sustained window with failures included in the published count (G5). Per D-009 the value that moves is the conditional FEE, buyer to gate; the purchase leg is paid by the buyer directly and is not a KeeperHub execution. KeeperHub broadcast via a SPONSORED relayer, so msg.sender is KeeperHub's relayer rather than our organisation wallet \u2014 the submission must describe it that way."
     },
     {
       "id": "C-004",

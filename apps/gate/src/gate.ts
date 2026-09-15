@@ -30,10 +30,18 @@ const V2_HEADER = "payment-required";
 const PAYMENT_SIGNATURE_HEADER = "payment-signature";
 const PAYMENT_SIGNATURE_HEADER_V1 = "x-payment";
 
+export type RequestShape = {
+  readonly method: string;
+  readonly body: string | null;
+  readonly contentType: string | null;
+};
+
 export type Quote = {
   readonly quoteId: string;
   readonly url: string;
   readonly intent: BuyerIntent;
+  /** How the seller says it must be called (bazaar `info.input`), or a plain GET. */
+  readonly requestShape: RequestShape;
   readonly advertised: AdvertisedTerms;
   /** The seller's raw 402, handed back so the buyer's wallet can sign against it directly. */
   readonly rawPaymentRequired: unknown;
@@ -61,9 +69,80 @@ function decodeHeaderPayload(value: string): unknown {
  * §8.2 step 2: refuse before any purchase.
  * ------------------------------------------------------------------ */
 
+/*
+ * The x402 bazaar extension lets a seller declare HOW its resource must be called —
+ * method, query parameters, request body. Ignoring that declaration and sending a bare GET
+ * produces a paid call that fails for OUR reason, recorded against the SELLER's delivery
+ * record. Found on 2026-09-15: two non-discharges were self-inflicted this way, one a
+ * POST-only endpoint and one requiring query parameters.
+ *
+ * So the declaration is read and honoured. It is used only to shape the request; it is
+ * never a verdict input (D-005).
+ */
+function requestShapeFrom(raw: unknown, override?: Partial<RequestShape>): RequestShape {
+  const fallback: RequestShape = { method: "GET", body: null, contentType: null };
+  const payload = raw as { extensions?: Record<string, unknown> } | null;
+  const bazaar = payload?.extensions?.["bazaar"] as Record<string, unknown> | undefined;
+  const info = bazaar?.["info"] as Record<string, unknown> | undefined;
+  const input = info?.["input"] as Record<string, unknown> | undefined;
+
+  let shape = fallback;
+  if (input !== undefined) {
+    const method = typeof input["method"] === "string" ? input["method"].toUpperCase() : "GET";
+    const bodyValue = input["body"];
+    const hasBody = bodyValue !== undefined && bodyValue !== null;
+    shape = {
+      method,
+      body: hasBody ? JSON.stringify(bodyValue) : null,
+      contentType: hasBody ? "application/json" : null,
+    };
+  }
+  return { ...shape, ...(override ?? {}) };
+}
+
+/** Methods that cannot carry a request body. */
+const BODYLESS = new Set(["GET", "HEAD", "DELETE"]);
+
+/**
+ * A declaration that asks for a body on a body-less method cannot be executed: `fetch`
+ * throws before the request leaves the process.
+ *
+ * Found live on 2026-09-15: a seller mirrors the probing method back into
+ * `bazaar.info.input.method` while always declaring `bodyType: "json"` and a body. Probed
+ * with GET it declares `method: "GET"` WITH a JSON body. The bazaar specification makes
+ * `bodyType` the discriminator for body methods, so the declaration contradicts itself.
+ *
+ * We refuse at QUOTE time rather than guess a method. Guessing would be inventing a
+ * protocol fact (§17), and paying first and failing after would charge the buyer for a call
+ * that could never have succeeded — and would record that failure against the seller's
+ * delivery record. A caller that knows better can pass `requestShape` explicitly.
+ */
+export function shapeIsExecutable(shape: RequestShape): string | null {
+  if (shape.body !== null && BODYLESS.has(shape.method)) {
+    return `the seller declares a request body with method ${shape.method}, which cannot carry one; bazaar uses bodyType to mark body methods, so this declaration contradicts itself. Pass an explicit requestShape to override.`;
+  }
+  return null;
+}
+
+/** Append the seller's declared query parameters when the caller supplied none. */
+function withDeclaredQuery(url: string, raw: unknown): string {
+  const payload = raw as { extensions?: Record<string, unknown> } | null;
+  const bazaar = payload?.extensions?.["bazaar"] as Record<string, unknown> | undefined;
+  const info = bazaar?.["info"] as Record<string, unknown> | undefined;
+  const input = info?.["input"] as Record<string, unknown> | undefined;
+  const params = input?.["queryParams"] as Record<string, unknown> | undefined;
+  if (params === undefined) return url;
+
+  const parsed = new URL(url);
+  if ([...parsed.searchParams.keys()].length > 0) return url;
+  for (const [k, v] of Object.entries(params)) parsed.searchParams.set(k, String(v));
+  return parsed.toString();
+}
+
 export async function quote(args: {
   readonly url: string;
   readonly intent: BuyerIntent;
+  readonly requestShape?: Partial<RequestShape>;
 }): Promise<QuoteOutcome> {
   let host: string;
   try {
@@ -119,10 +198,18 @@ export async function quote(args: {
     };
   }
 
+  const shape = requestShapeFrom(raw, args.requestShape);
+  const unexecutable = shapeIsExecutable(shape);
+  if (unexecutable !== null) {
+    /* Refused before any purchase. The buyer pays nothing for a call that cannot work. */
+    return { ok: false, verdict: "REQUIREMENTS_MISMATCH", reason: unexecutable };
+  }
+
   const q: Quote = {
     quoteId: randomUUID(),
-    url: args.url,
+    url: withDeclaredQuery(args.url, raw),
     intent: args.intent,
+    requestShape: shape,
     advertised,
     rawPaymentRequired: raw,
     createdAt: new Date().toISOString(),
@@ -181,9 +268,15 @@ export async function call(args: {
   let body: Uint8Array | null = null;
 
   try {
+    const headers: Record<string, string> = {
+      accept: "application/json",
+      [headerName]: args.paymentHeader,
+    };
+    if (q.requestShape.contentType !== null) headers["content-type"] = q.requestShape.contentType;
     const response = await fetch(q.url, {
-      method: "GET",
-      headers: { accept: "application/json", [headerName]: args.paymentHeader },
+      method: q.requestShape.method,
+      headers,
+      ...(q.requestShape.body === null ? {} : { body: q.requestShape.body }),
     });
     const bytes = new Uint8Array(await response.arrayBuffer());
     const latencyMs = Date.now() - began;
@@ -219,7 +312,8 @@ export async function call(args: {
 
   const requestSha256 = await sha256Canonical({
     url: q.url,
-    method: "GET",
+    method: q.requestShape.method,
+    body: q.requestShape.body,
     x402Version: q.advertised.x402Version,
   });
 
@@ -252,7 +346,7 @@ export async function call(args: {
     receiptVersion: 1,
     intent: q.intent,
     advertised: q.advertised,
-    request: { url: q.url, method: "GET", requestSha256, startedAt },
+    request: { url: q.url, method: q.requestShape.method, requestSha256, startedAt },
     observed,
     run: { keeperhubRunId, dischargeTxHash, mode: "gate", label: args.label },
     publishedVerdict: state,
