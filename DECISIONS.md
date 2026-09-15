@@ -675,3 +675,56 @@ false `NOT_DELIVERED` cost the gate the purchase price. Now a false `NOT_DELIVER
 only its own fee, and a false `DELIVERED_AS_ADVERTISED` earns it one. The incentive to over-report
 delivery is new, and it is disclosed. The receipt still commits to `sha256(response)`, so a seller or
 buyer holding the bytes can disprove it — the recourse is unchanged, and it is the only recourse.
+
+---
+
+## D-010 · Testnet is a staging rung, never an evidence rung · 2026-09-15 · active
+
+### What was decided
+
+The live path is brought up in three steps: **simulate → Base Sepolia → Base mainnet.**
+
+Testnet is used to validate plumbing, **not** to produce evidence. This is not K5 firing. K5 covers
+testnet *replacing* mainnet when funding is unavailable; this is staging before mainnet, and mainnet
+remains the evidence network (§16).
+
+### Why testnet cannot produce evidence, and this is a hard fact not a preference
+
+Measured against the live x402 discovery index on 2026-09-15: **99 of 100 listed resources are on
+`eip155:8453` (Base mainnet), 1 on Solana, and zero on `eip155:84532` (Base Sepolia).**
+
+There is no third-party x402 seller on testnet to call. Any testnet run therefore calls **our own**
+endpoint, which is `PROJECT_BASELINE` by definition — and §2, §8.3 and K1 all forbid presenting our
+own endpoint as the live project or as third-party adoption.
+
+So:
+
+| Step | Network | Seller | What it can prove | What it cannot |
+|---|---|---|---|---|
+| 1. `simulate: true` | either | any | The contract-call shape is right and KeeperHub accepts our auth. **Costs nothing** | Nothing broadcast, so nothing about execution |
+| 2. Base Sepolia | 84532 | **ours only** | A real broadcast lands; idempotency replays; `SETTLEMENT_FAILED` is handled | **Not C-003, not C-004.** No third-party counterparty exists there |
+| 3. Base mainnet | 8453 | live third parties | **C-003 and C-004.** G3 and G4 | — |
+
+KeeperHub supports Base Sepolia (chain 84532, `isEnabled: true`, read live from `GET /api/chains`),
+so step 2 is executable.
+
+### Labelling, enforced not merely intended
+
+Every receipt produced in step 1 or step 2 carries `label: "PROJECT_BASELINE"` and is **excluded from
+every third-party count**. §16: "Testnet is a fallback with consequences, never a substitute presented
+as mainnet." A testnet transaction hash is never offered as the §24 submission transaction, and
+`docs/submission.md` says "mainnet" only once a mainnet transaction exists.
+
+The receipt already records `advertised.network` from the seller's own terms, so a reader can tell
+which chain any row ran on without trusting a label.
+
+### What it costs
+
+**Cost 1 — step 2 proves less than it looks like it proves.** A green testnet run will show the whole
+pipeline working end to end and will still leave C-003 and C-004 at R0. Anyone reading a testnet run
+as progress against the main-track thesis is reading it wrong, and the labelling exists to stop that.
+
+**Cost 2 — time spent on step 2 is time not spent on step 3,** with under three days left. Step 1
+costs nothing and needs only an API key, so it is unconditionally worth doing. Step 2 is worth doing
+only if a mainnet buyer wallet is not ready; if it is ready, go straight to step 3 and use
+`simulate: true` as the safety net instead.
