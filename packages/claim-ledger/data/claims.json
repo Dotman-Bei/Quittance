@@ -1,0 +1,163 @@
+{
+  "$schema": "./claims.schema.json",
+  "version": 1,
+  "generated": false,
+  "note": "Source of truth for every claim this project makes. docs/claims.md is generated from this file and is never hand-edited. A claim and its evidence land in the same commit or neither lands (PRD \u00a721).",
+  "ladder": {
+    "R0": "Asserted in a document",
+    "R1": "Covered by a passing test on generated or fixture data",
+    "R2": "Executed once against a live third-party endpoint on a public network, receipt recorded",
+    "R3": "Executed repeatedly over a sustained window, with failures included in the published count",
+    "R4": "Re-derived by packages/verifier from a fresh clone with no access to our database"
+  },
+  "forbiddenVocabulary": [
+    "guaranteed",
+    "safe",
+    "trustless",
+    "refund",
+    "insured",
+    "verified quality"
+  ],
+  "claims": [
+    {
+      "id": "C-001",
+      "claim": "A discharge fires only on DELIVERED_AS_ADVERTISED",
+      "currentRung": "R1",
+      "targetRung": "R4",
+      "status": "asserted",
+      "phase": "P1",
+      "gates": [
+        "G2"
+      ],
+      "killCriteria": [
+        "K4"
+      ],
+      "evidence": [
+        {
+          "kind": "test",
+          "command": "pnpm test:properties",
+          "path": "packages/reference/test/verdict.properties.test.ts",
+          "reaches": "R1",
+          "detail": "fast-check over 2000 generated envelopes per property: verdict() is total and enumerated; isDischargeEligible is true for DELIVERED_AS_ADVERTISED and for no other state; gate_error, settlement_failed, a zero-byte body, a non-2xx status, and a price above the intent cap are each never discharge-eligible."
+        }
+      ],
+      "notes": "R1 covers the DECISION FUNCTION only. The gate that acts on it is P2 and does not exist, so no discharge has been fired or withheld in reality. R2 requires a live third-party call. Narrowed by D-002: against a seller publishing neither mimeType nor schema the structural check is status plus non-empty body, plus the buyer's latency bound."
+    },
+    {
+      "id": "C-002",
+      "claim": "Any stranger can re-derive a published verdict from the receipt and the chain",
+      "currentRung": "R0",
+      "targetRung": "R4",
+      "status": "asserted",
+      "phase": "P1",
+      "gates": [
+        "G2",
+        "G7"
+      ],
+      "killCriteria": [
+        "K3"
+      ],
+      "evidence": [
+        {
+          "kind": "test",
+          "command": "pnpm test",
+          "path": "packages/reference/test/re-derive.test.ts",
+          "reaches": "R1 for the receipt half only",
+          "detail": "reDerive() re-runs verdict() over a receipt's own committed inputs with no gate access, detects a forged published verdict, detects a tampered response body against the receipt's sha256 commitment, and flags a discharge recorded against a non-eligible state. Exercised end to end through the packages/verifier CLI."
+        }
+      ],
+      "notes": "HELD AT R0 DELIBERATELY. The claim says 'from the receipt AND THE CHAIN'. Only the receipt half is covered by a passing test; no chain data is read anywhere yet, and no verdict has been published to re-derive. A claim may not state a rung its evidence does not reach (\u00a721), so the evidence is recorded but the rung is not raised. If K3 fires, drop the R4 target to R2 and publish which input is missing."
+    },
+    {
+      "id": "C-003",
+      "claim": "Value moved through KeeperHub, triggered by a call to a live listed endpoint",
+      "currentRung": "R0",
+      "targetRung": "R3",
+      "status": "asserted",
+      "phase": "P2",
+      "gates": [
+        "G3"
+      ],
+      "killCriteria": [
+        "K1",
+        "K2",
+        "K5"
+      ],
+      "evidence": [],
+      "notes": "Discharge leg only. The purchase leg is broadcast by the seller's own facilitator and is not a KeeperHub execution (D-001)."
+    },
+    {
+      "id": "C-004",
+      "claim": "Non-delivery against a live endpoint was recorded and the discharge did not execute",
+      "currentRung": "R0",
+      "targetRung": "R2",
+      "status": "asserted",
+      "phase": "P2",
+      "gates": [
+        "G4"
+      ],
+      "killCriteria": [
+        "K1"
+      ],
+      "evidence": [],
+      "notes": "The absence of a discharge transaction is the point of this claim, not an omission in its evidence."
+    },
+    {
+      "id": "C-005",
+      "claim": "A duplicate settlement attempt does not produce a second discharge",
+      "currentRung": "R0",
+      "targetRung": "R3",
+      "status": "asserted",
+      "phase": "P3",
+      "gates": [
+        "G10"
+      ],
+      "killCriteria": [
+        "K5",
+        "K7"
+      ],
+      "evidence": [],
+      "notes": "Must be proven against a live run, not only in unit tests. If K7 fires, campaign totals restart from zero and prior totals are not reused."
+    },
+    {
+      "id": "C-006",
+      "claim": "The system survived an induced infrastructure failure and recovered",
+      "currentRung": "R0",
+      "targetRung": "R2",
+      "status": "asserted",
+      "phase": "P3",
+      "gates": [
+        "G6"
+      ],
+      "killCriteria": [],
+      "evidence": [],
+      "notes": "Transient infrastructure errors are counted and reported separately from verdicts and are never folded into an endpoint's delivery record."
+    },
+    {
+      "id": "C-007",
+      "claim": "Endpoint delivery records are computed from receipts, not from seller-reported metadata",
+      "currentRung": "R0",
+      "targetRung": "R3",
+      "status": "asserted",
+      "phase": "P3",
+      "gates": [
+        "G5"
+      ],
+      "killCriteria": [
+        "K1",
+        "K4",
+        "K5"
+      ],
+      "evidence": [
+        {
+          "kind": "probe",
+          "command": "pnpm probe:all",
+          "path": "evidence/probes/2026-09-09-g1-probe-run.md",
+          "reaches": "supports the mechanism, raises no rung",
+          "detail": "Advertised terms read live from 39 of 46 distinct hosts on Base mainnet, entirely from each seller's own 402 response and never from the discovery index. The index disagreed with the live terms (it reported a mimeType for 5 of 100 resources; the live 402s carry one for 38 of 38), which is direct evidence that seller-reported index metadata is not a substitute for reading the terms."
+        }
+      ],
+      "notes": "HELD AT R0. The claim is about DELIVERY RECORDS computed from receipts, and no receipt exists because nothing has been paid for. The probe evidence shows terms are read from the seller's own response rather than from metadata, which supports the mechanism but does not evidence the claim. R2 requires a recorded gated call. Under 20 gated calls an endpoint renders INSUFFICIENT SAMPLE, never a percentage. PROJECT_BASELINE rows are excluded from third-party counts."
+    }
+  ]
+}

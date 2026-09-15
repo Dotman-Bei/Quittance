@@ -1,0 +1,38 @@
+# HB-7: nothing under internal/ is committed. It is working space.
+internal/
+
+# Secrets. .env.example is the only environment file that is tracked.
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+out/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Foundry / contracts
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# OS and editor noise
+.DS_Store
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Playwright artifacts. Traces are uploaded by CI on failure, never committed.
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/e2e/.seeded.json

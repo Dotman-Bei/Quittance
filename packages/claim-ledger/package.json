@@ -1,0 +1,11 @@
+{
+  "name": "@quittance/claim-ledger",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --version >/dev/null",
+    "typecheck": "node --version >/dev/null",
+    "test": "node --version >/dev/null"
+  }
+}

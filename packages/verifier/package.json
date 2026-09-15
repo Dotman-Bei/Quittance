@@ -1,0 +1,34 @@
+{
+  "name": "@quittance/verifier",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "quittance": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@quittance/protocol-types": "workspace:*",
+    "@quittance/reference": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "vitest": "2.1.8",
+    "@types/node": "20.17.10"
+  }
+}

@@ -1,0 +1,272 @@
+# Quittance CI
+#
+# PRD §22: a gate passes only when its command exits zero on a fresh clone.
+# PRD §12 P4: KeeperHub is the only path to chain. CI fails the build if a raw signer appears.
+# PRD §17: CI fails the build if an address literal appears in apps/ or packages/.
+# AGENTS.md §3: the hard blocks below are enforced here, not by convention.
+
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    # PRD §17: probes run on a CI schedule to catch protocol drift.
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Hard blocks (AGENTS.md §3). These run without installing anything.
+  # ---------------------------------------------------------------------------
+  hard-blocks:
+    name: hard blocks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: HB-1 no `as any`
+        run: |
+          if grep -rInE '\bas\s+any\b' --include='*.ts' --include='*.tsx' apps packages scripts contracts 2>/dev/null; then
+            echo "::error::HB-1 violated: 'as any' found. AGENTS.md §3."
+            exit 1
+          fi
+          echo "HB-1 clean"
+
+      - name: HB-2 no ts suppression comments
+        run: |
+          if grep -rInE '@ts-(ignore|expect-error|nocheck)' --include='*.ts' --include='*.tsx' apps packages scripts contracts 2>/dev/null; then
+            echo "::error::HB-2 violated: TypeScript suppression comment found. AGENTS.md §3."
+            exit 1
+          fi
+          echo "HB-2 clean"
+
+      - name: HB-3 no empty catch
+        run: |
+          # catch (e) {} / catch {} with only whitespace or a bare comment between the braces
+          if grep -rInzoE 'catch[[:space:]]*(\([^)]*\))?[[:space:]]*\{[[:space:]]*\}' --include='*.ts' --include='*.tsx' apps packages scripts 2>/dev/null | tr '\0' '\n' | grep .; then
+            echo "::error::HB-3 violated: empty catch block found. AGENTS.md §3."
+            exit 1
+          fi
+          echo "HB-3 clean"
+
+      - name: HB-4 no absolute developer paths
+        run: |
+          if grep -rInE '(/Users/[A-Za-z0-9._-]+|/home/[A-Za-z0-9._-]+|[A-Z]:\\\\)' \
+               --include='*.ts' --include='*.tsx' --include='*.json' --include='*.md' \
+               --include='*.yml' --include='*.yaml' --include='*.sol' \
+               apps packages scripts contracts docs 2>/dev/null; then
+            echo "::error::HB-4 violated: absolute developer path found. G7 runs from a fresh clone. AGENTS.md §3."
+            exit 1
+          fi
+          echo "HB-4 clean"
+
+      - name: HB-5 no skipped or exclusive tests
+        run: |
+          if grep -rInE '\b(describe|it|test)\.(skip|only)\b|\bxit\(|\bxdescribe\(' \
+               --include='*.ts' --include='*.tsx' apps packages scripts 2>/dev/null; then
+            echo "::error::HB-5 violated: a test is skipped or exclusive. Fix the code or narrow the claim. AGENTS.md §3."
+            exit 1
+          fi
+          echo "HB-5 clean"
+
+      - name: HB-6 no swallowing default case
+        run: |
+          # A `default:` that falls straight through to break/return without handling the state.
+          if grep -rInzoE 'default:[[:space:]]*(break;|return (false|null|undefined|void 0);)' \
+               --include='*.ts' --include='*.tsx' apps packages 2>/dev/null | tr '\0' '\n' | grep .; then
+            echo "::error::HB-6 violated: a default: case swallows an unknown state. VerdictState is exhaustive. AGENTS.md §3."
+            exit 1
+          fi
+          echo "HB-6 clean"
+
+      - name: HB-7 nothing under internal/ is committed
+        run: |
+          tracked=$(git ls-files internal/ | head -20)
+          if [ -n "$tracked" ]; then
+            echo "::error::HB-7 violated: files tracked under internal/. AGENTS.md §3."
+            echo "$tracked"
+            exit 1
+          fi
+          echo "HB-7 clean"
+
+  # ---------------------------------------------------------------------------
+  # PRD §12 P4 and §17. These are product properties, not lint preferences.
+  # ---------------------------------------------------------------------------
+  properties:
+    name: P4 and protocol-fact properties
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: P4 no raw signer or write client
+        run: |
+          # PRD §12: KeeperHub is the only path to chain.
+          if grep -rInE '\b(privateKeyToAccount|mnemonicToAccount|createWalletClient|WalletClient|signTransaction|sendTransaction|sendRawTransaction|new Wallet\(|ethers\.Wallet|Keypair\.fromSecretKey)\b' \
+               --include='*.ts' --include='*.tsx' apps packages 2>/dev/null; then
+            echo "::error::P4 violated: a raw signer or write client appears in apps/ or packages/. AGENTS.md §4."
+            exit 1
+          fi
+          echo "P4 signer check clean"
+
+      - name: P4 no private key material
+        run: |
+          # 0x + 64 hex = a secp256k1 private key shape. Also catch mnemonic/seed variable names.
+          if grep -rInE '0x[0-9a-fA-F]{64}\b|\b(PRIVATE_KEY|privateKey|MNEMONIC|mnemonic|SEED_PHRASE|seedPhrase)\b[[:space:]]*[:=]' \
+               --include='*.ts' --include='*.tsx' --include='*.json' apps packages 2>/dev/null; then
+            echo "::error::P4 violated: private key material or a key-shaped literal in apps/ or packages/. AGENTS.md §4."
+            exit 1
+          fi
+          echo "P4 key check clean"
+
+      - name: G1 no compiled-in protocol facts
+        run: |
+          # PRD §17: no address, ABI, price, header name, or facilitator URL as a literal.
+          fail=0
+          if grep -rInE '0x[0-9a-fA-F]{40}\b' --include='*.ts' --include='*.tsx' apps packages 2>/dev/null; then
+            echo "::error::§17 violated: address literal in apps/ or packages/."
+            fail=1
+          fi
+          if grep -rInE '["'"'"'](https?://[^"'"'"']*facilitator[^"'"'"']*)["'"'"']' --include='*.ts' --include='*.tsx' apps packages 2>/dev/null; then
+            echo "::error::§17 violated: facilitator URL literal in apps/ or packages/."
+            fail=1
+          fi
+          exit $fail
+
+      - name: skills-lock integrity
+        # PRD §0.2: do not work from memory. Pinned upstream must not have drifted.
+        run: node scripts/skills-verify.mjs
+
+  # ---------------------------------------------------------------------------
+  # Build / typecheck / test
+  # ---------------------------------------------------------------------------
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # TypeScript strict. A suppression comment is already blocked by HB-2.
+      - run: pnpm typecheck
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  # ---------------------------------------------------------------------------
+  # §13 "Playwright for /receipt/:hash and /verify."
+  # Runs against a production build: `next dev` compiles each route on first request,
+  # which makes the suite measure the compiler rather than the page.
+  # ---------------------------------------------------------------------------
+  e2e:
+    name: e2e (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r --filter './packages/**' build
+      - run: pnpm --filter @quittance/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @quittance/web test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: apps/web/test-results/
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # G1 — §17 probes. Run on every push for the address-literal half, and on the
+  # schedule for the live half, which needs network and configuration.
+  # ---------------------------------------------------------------------------
+  probe:
+    name: G1 probes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @quittance/protocol-types build
+
+      - name: probe:all
+        # §17: the probes run at startup and on a CI schedule. On mismatch the service
+        # enters PROTOCOL_CONFIG_CHANGED and stops gating rather than guessing, and this
+        # step fails rather than reporting a passed gate beside a state that cannot gate.
+        #
+        # Targets are configuration, never compiled in. Without them the probe fails
+        # closed, which is the correct behaviour and is why this step is not
+        # continue-on-error.
+        env:
+          PROBE_X402_TARGETS: ${{ vars.PROBE_X402_TARGETS }}
+          KEEPERHUB_API_BASE_URL: ${{ vars.KEEPERHUB_API_BASE_URL }}
+          KEEPERHUB_API_KEY: ${{ secrets.KEEPERHUB_API_KEY }}
+        run: pnpm probe:all
+
+  # ---------------------------------------------------------------------------
+  # Evidence job — PRD §21, gate G8.
+  # A claim may not state a rung its evidence does not reach, and no forbidden
+  # word may appear in any claim or UI string.
+  # ---------------------------------------------------------------------------
+  evidence:
+    name: evidence (claim:verify)
+    runs-on: ubuntu-latest
+    needs: [hard-blocks, properties]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "${{ env.PNPM_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: claim:verify
+        run: pnpm claim:verify

@@ -1,0 +1,27 @@
+{
+  "name": "quittance",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter './packages/**' build && pnpm --filter @quittance/web build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:properties": "pnpm --filter @quittance/reference test",
+    "claim:verify": "node scripts/claim-verify.mjs",
+    "skills:verify": "node scripts/skills-verify.mjs",
+    "web": "pnpm --filter @quittance/web dev",
+    "probe:all": "tsx scripts/probe-all.ts",
+    "probe:x402": "tsx -e \"import{probeX402,readTargetsFromEnv,describe}from\\\"./scripts/probe-x402.js\\\";probeX402(readTargetsFromEnv()).then(rs=>rs.forEach(r=>console.log(describe(r))))\"",
+    "claims:generate": "node scripts/claims-generate.mjs",
+    "submission:check": "node scripts/submission-check.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "tsx": "4.19.2",
+    "@quittance/protocol-types": "workspace:*"
+  }
+}

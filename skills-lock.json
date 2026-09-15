@@ -1,0 +1,334 @@
+{
+  "$comment": "PRD section 0 rule 2: install the official documentation as pinned skills. Do not work from memory about x402, KeeperHub, or the Lucid SDK. Pin each source by repo, path, and SHA-256. sha256 is of the retrieved bytes at the pinned commit; CI re-verifies every entry.",
+  "lockfileVersion": 1,
+  "pinnedAt": "2026-09-09",
+  "algorithm": "sha256",
+  "rawUrlTemplate": "https://raw.githubusercontent.com/{repo}/{commit}/{sourcePath}",
+  "policy": {
+    "onDrift": "Do not re-pin silently. Read what changed. If upstream now contradicts PRD.md, upstream wins: record the discrepancy in DECISIONS.md and adapt while preserving the product thesis (PRD section 0, rule 3).",
+    "verifyCommand": "see SETUP.md, and the skills-lock integrity step in .github/workflows/ci.yml"
+  },
+  "skills": [
+    {
+      "name": "keeperhub",
+      "repo": "KeeperHub/keeperhub",
+      "branch": "staging",
+      "commit": "801dfd573ac0c4a12b39010e404069ccca900d78",
+      "description": "KeeperHub execution layer documentation: Turnkey wallets, direct execution, triggers, Executions API, recovery.",
+      "prdSections": [
+        "8.4",
+        "12 P4",
+        "15"
+      ],
+      "skillPath": ".agents/skills/keeperhub/SKILL.md",
+      "references": [
+        {
+          "sourcePath": "docs/agent/agentic-wallet.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/agentic-wallet.md",
+          "sha256": "b61ba0e89ea601e918f1699382441f20ade6b038522ad719acf220923fb82538",
+          "bytes": 25815
+        },
+        {
+          "sourcePath": "docs/agent/index.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/agent-index.md",
+          "sha256": "28b2475288175aa1283e71c729879cea5617718c818f8d88f0d817d9273fdb43",
+          "bytes": 1966
+        },
+        {
+          "sourcePath": "docs/api/api-keys.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/api-keys.md",
+          "sha256": "e82a2fc1dbd34f34cccb1a833d4122f7e0763dbf5e0ff875180d35087ac9e3a8",
+          "bytes": 5219
+        },
+        {
+          "sourcePath": "docs/api/authentication.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/api-authentication.md",
+          "sha256": "ea424840518ad3d541336dd2301297b9357701730c5794ad3ed44a73ad863a30",
+          "bytes": 6567
+        },
+        {
+          "sourcePath": "docs/api/chains.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/chains.md",
+          "sha256": "942ee2a8a8a108c9650c7246e29cb4f47624a06d412d243800479512a596390a",
+          "bytes": 6266
+        },
+        {
+          "sourcePath": "docs/api/direct-execution.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/direct-execution.md",
+          "sha256": "098e8c68ff531e0fce93a01764aa5e49dfc5508d255bc2799a6eea5453535e4c",
+          "bytes": 48284
+        },
+        {
+          "sourcePath": "docs/api/errors.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/errors.md",
+          "sha256": "adf47737680613f31a86329689e79c92262fe8284857927938a9ab3dc23c62e0",
+          "bytes": 6274
+        },
+        {
+          "sourcePath": "docs/api/executions.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/executions-api.md",
+          "sha256": "cff6c273d0baf20250dbd869cf9acd7103a0a6dee6ecc0054bf0d07818db542a",
+          "bytes": 12158
+        },
+        {
+          "sourcePath": "docs/api/index.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/api-overview.md",
+          "sha256": "0a306d8b37ad3b2c0a21ce565386735e5a36fb9224289eceedb7ab4bc25a6d22",
+          "bytes": 7138
+        },
+        {
+          "sourcePath": "docs/cli/commands/kh_execute_contract-call.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/cli-execute-contract-call.md",
+          "sha256": "c46f98104deea13d0993f421f7208b286263d2f4242bd9094acbd666377dca65",
+          "bytes": 1485
+        },
+        {
+          "sourcePath": "docs/cli/commands/kh_execute_status.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/cli-execute-status.md",
+          "sha256": "8a9112352ca0885429af8adf15f60c7154e617bef5144ff6346e1ee17f4b3c89",
+          "bytes": 1896
+        },
+        {
+          "sourcePath": "docs/cli/commands/kh_execute_transfer.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/cli-execute-transfer.md",
+          "sha256": "908c9431dadbbed431f042f02d8df54d34944016daa4e3e1141eefc8ae9331ba",
+          "bytes": 1375
+        },
+        {
+          "sourcePath": "docs/cli/execution-recovery.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/execution-recovery.md",
+          "sha256": "51075d115dc7a49b4056626c23ca38c053f0c13f64527fb78af1da129fda8e11",
+          "bytes": 3875
+        },
+        {
+          "sourcePath": "docs/getting-started/api.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/getting-started-api.md",
+          "sha256": "08f2ed17c79a5def4991f9e1a7b1eaa5c7f891fb4413d8d8116182a2081ffe65",
+          "bytes": 6993
+        },
+        {
+          "sourcePath": "docs/guides/first-verified-transaction.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/first-verified-transaction.md",
+          "sha256": "38c342a3b6ad40e2e1700711e495535bcfd97c4a7cec120b9d71d309c7374a79",
+          "bytes": 12238
+        },
+        {
+          "sourcePath": "docs/plugins/webhook.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/webhook-trigger.md",
+          "sha256": "7bfdfed02fc571a342d4bb2fd1cba0a4186c333b2fc07817b913645732325117",
+          "bytes": 943
+        },
+        {
+          "sourcePath": "docs/wallet-management/turnkey.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/turnkey-wallet.md",
+          "sha256": "d759a8546efd2760652d87dc9171e385e38bffdb2d488057c646c20df406351a",
+          "bytes": 5365
+        },
+        {
+          "sourcePath": "specs/schedule-trigger.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/schedule-trigger.md",
+          "sha256": "5723e057ac4297da76293aabfc035049a9b93d7d57480fcc4c16cafdd4fec8b9",
+          "bytes": 16495
+        },
+        {
+          "sourcePath": "specs/workflow-execution-runtime.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/workflow-execution-runtime.md",
+          "sha256": "2548903a6d68944f25246fd026839a9dc42032ec674d43fe6655752ef71b58ae",
+          "bytes": 19258
+        }
+      ]
+    },
+    {
+      "name": "x402",
+      "repo": "coinbase/x402",
+      "branch": "main",
+      "commit": "dd927a26cfefc98c24b3ec38b3a8f204dad0c60d",
+      "description": "x402 payments protocol specification v1 and v2, HTTP transports, exact scheme, bazaar discovery, offer/receipt extension.",
+      "prdSections": [
+        "5.2",
+        "8.2",
+        "17"
+      ],
+      "skillPath": ".agents/skills/x402/SKILL.md",
+      "references": [
+        {
+          "sourcePath": "docs/core-concepts/client-server.md",
+          "vendoredPath": ".agents/skills/x402/references/concept-client-server.md",
+          "sha256": "ffc1efc3f973684feec8708dd006ef365a9d0c331f5c9845e6120529aa6b7f7b",
+          "bytes": 4935
+        },
+        {
+          "sourcePath": "docs/core-concepts/facilitator.md",
+          "vendoredPath": ".agents/skills/x402/references/concept-facilitator.md",
+          "sha256": "d2d78d9af39003c95b926aad13f05fe636ddbb05522939a85c571436edc62fe6",
+          "bytes": 5915
+        },
+        {
+          "sourcePath": "docs/core-concepts/http-402.md",
+          "vendoredPath": ".agents/skills/x402/references/concept-http-402.md",
+          "sha256": "3c56b0b4e4fab2c600b2a4ec408618ab6e92c008d7cca581f4003e6a83fbcd03",
+          "bytes": 2799
+        },
+        {
+          "sourcePath": "specs/extensions/bazaar.md",
+          "vendoredPath": ".agents/skills/x402/references/extension-bazaar-discovery.md",
+          "sha256": "aee078d05b424a28f38a2b3c9473e7c2ba9ee6ab6603e61fedf8204d68aaa179",
+          "bytes": 16729
+        },
+        {
+          "sourcePath": "specs/extensions/extension-offer-and-receipt.md",
+          "vendoredPath": ".agents/skills/x402/references/extension-offer-and-receipt.md",
+          "sha256": "87dbb8df1d55238bb8c245d16230f52df184cca3c16c6991a4ba0b98f83f3e21",
+          "bytes": 38826
+        },
+        {
+          "sourcePath": "specs/README.md",
+          "vendoredPath": ".agents/skills/x402/references/specs-readme.md",
+          "sha256": "9d2c26572ac4d0dc34d912139bba58d1ca75d170e23cec8d4a674c92c87405f8",
+          "bytes": 265
+        },
+        {
+          "sourcePath": "specs/schemes/exact/scheme_exact_evm.md",
+          "vendoredPath": ".agents/skills/x402/references/scheme-exact-evm.md",
+          "sha256": "4bbc89027d21b8f50974ecfe032a1bed9b3bc4476ba884fa9adac1dff0cac9bb",
+          "bytes": 19006
+        },
+        {
+          "sourcePath": "specs/schemes/exact/scheme_exact.md",
+          "vendoredPath": ".agents/skills/x402/references/scheme-exact.md",
+          "sha256": "1707fe8796b57227c3b649ca55a5f9119311534d2a963b9b07969943c212ddc5",
+          "bytes": 1735
+        },
+        {
+          "sourcePath": "specs/transports-v1/http.md",
+          "vendoredPath": ".agents/skills/x402/references/transport-v1-http.md",
+          "sha256": "fee8f063334da8729ce7270f441b4311f34183d5613ee201d0dbd1b8b0b7fc12",
+          "bytes": 5428
+        },
+        {
+          "sourcePath": "specs/transports-v2/http.md",
+          "vendoredPath": ".agents/skills/x402/references/transport-v2-http.md",
+          "sha256": "4594c224c7a42f3ba3f3e5ea4e3d888bbfa040138ea51e5dae825ae73b0869b7",
+          "bytes": 7290
+        },
+        {
+          "sourcePath": "specs/x402-specification-v1.md",
+          "vendoredPath": ".agents/skills/x402/references/x402-specification-v1.md",
+          "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+          "bytes": 25857
+        },
+        {
+          "sourcePath": "specs/x402-specification-v2.md",
+          "vendoredPath": ".agents/skills/x402/references/x402-specification-v2.md",
+          "sha256": "aa6dc5e8ccc7758689945fc7502674f51cd0f21f09ec886aa1dbc4cd86bc81b6",
+          "bytes": 31299
+        }
+      ]
+    },
+    {
+      "name": "lucid-sdk",
+      "repo": "daydreamsai/lucid-agents",
+      "branch": "master",
+      "commit": "3d9fa1d2ffef98efe4a0490e2434561799de41f4",
+      "description": "Lucid Agents Commerce SDK (Daydreams), the live counterparty. Paid-service calls, x402 payment methods, discovery, retries and idempotency, budgets, adapters.",
+      "prdSections": [
+        "2",
+        "11",
+        "20"
+      ],
+      "skillPath": ".agents/skills/lucid-sdk/SKILL.md",
+      "references": [
+        {
+          "sourcePath": ".agents/skills/lucid-agents/references/adapters-scaffolding.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/adapters-scaffolding.md",
+          "sha256": "7c08da669afd7c47f7e5b539f9398b4dc941222570c5a15773d00e44ddc0bb60",
+          "bytes": 1434
+        },
+        {
+          "sourcePath": ".agents/skills/lucid-agents/references/discovery-tasks.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/discovery-tasks.md",
+          "sha256": "f692f026048fa8f7fcb1e71be322fe880f00a732790498bea0de91c28501505e",
+          "bytes": 1310
+        },
+        {
+          "sourcePath": ".agents/skills/lucid-agents/references/identity-wallets.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/identity-wallets.md",
+          "sha256": "4346780d6279f46f5e97a9e286f4f7dc3c3f59f0297d807a20696dc335469344",
+          "bytes": 1383
+        },
+        {
+          "sourcePath": ".agents/skills/lucid-agents/references/runtime-entrypoints.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/runtime-entrypoints.md",
+          "sha256": "e24dd427759e2230c7fb2d38a79300249f04dffd3abe79b3fb6565831bcb7f43",
+          "bytes": 1489
+        },
+        {
+          "sourcePath": ".agents/skills/lucid-agents/references/troubleshooting.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/troubleshooting.md",
+          "sha256": "9f8948fe1154889a438c7bca91e3e73f8f97da6f0adfac34803b0ace283a86c3",
+          "bytes": 1718
+        },
+        {
+          "sourcePath": ".agents/skills/lucid-agents/references/x402-payments.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/x402-payments.md",
+          "sha256": "1859a34ec5034302675166bd01892036f4b965b1e1f83e59a2cd60ad10fddb83",
+          "bytes": 1676
+        },
+        {
+          "sourcePath": ".agents/skills/lucid-agents/SKILL.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/upstream-SKILL.md",
+          "sha256": "24ce74fef21cd4eb6a0b548dc9efed3e27624e7655288a06ca41da1cdf1672e8",
+          "bytes": 6067
+        },
+        {
+          "sourcePath": "docs/ARCHITECTURE.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/ARCHITECTURE.md",
+          "sha256": "b1dde63c304286356fc3659a7c43fc8e6cf24db4da9f1f2198421b768f7211c2",
+          "bytes": 19624
+        },
+        {
+          "sourcePath": "docs/PAYMENTS.md",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/PAYMENTS.md",
+          "sha256": "be0ef92f4777d21d061df65f4547ac5ab763d5e7a0b8c1555e9b8636acb74786",
+          "bytes": 20812
+        },
+        {
+          "sourcePath": "lucid-docs/content/docs/build/receive-x402.mdx",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/build-receive-x402.mdx",
+          "sha256": "7ae66d36fc79f38b49df4d67c0fbae446a13c0aa056a77664a8639fe6be34773",
+          "bytes": 9210
+        },
+        {
+          "sourcePath": "lucid-docs/content/docs/buy/call-paid-service.mdx",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/buy-call-paid-service.mdx",
+          "sha256": "0175e94ab7e7603077323ce290fb9e32ea49082bd8347601b9250dccc6ee621e",
+          "bytes": 5501
+        },
+        {
+          "sourcePath": "lucid-docs/content/docs/buy/discovery.mdx",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/buy-discovery.mdx",
+          "sha256": "b37efc51dbbda5ee68abfc4183f43e302b3a9a889b2cd0bd3e469e202d7cc93b",
+          "bytes": 9183
+        },
+        {
+          "sourcePath": "lucid-docs/content/docs/buy/policies-budgets.mdx",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/buy-policies-budgets.mdx",
+          "sha256": "0f3eba614cceac1266cf34edb88227bd378e425a154e61dee762da34b56b09d3",
+          "bytes": 8998
+        },
+        {
+          "sourcePath": "lucid-docs/content/docs/buy/retries-idempotency.mdx",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/buy-retries-idempotency.mdx",
+          "sha256": "71931688dbaa6cf5802b5c8c2c1b8b0ffcc10ed3c377df7c1824995122d1d2ef",
+          "bytes": 10252
+        },
+        {
+          "sourcePath": "lucid-docs/content/docs/integrate/agent-frameworks.mdx",
+          "vendoredPath": ".agents/skills/lucid-sdk/references/integrate-agent-frameworks.mdx",
+          "sha256": "b5d93e1dd489b156634b2e39624ca69f1ef5bdef0a5a802783dcc2035daaad3f",
+          "bytes": 8898
+        }
+      ]
+    }
+  ]
+}
