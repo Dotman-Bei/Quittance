@@ -36,10 +36,12 @@ export default async function OverviewPage() {
   return (
     <div className="grid gap-12">
       <section className="grid gap-6">
-        <h1 className="max-w-3xl text-2xl leading-snug text-stark">
-          Delivery measured at the moment of delivery, by something that is not the seller.
+        <h1 className="display max-w-5xl text-5xl sm:text-6xl lg:text-7xl">
+          Delivery is a promise.
+          <br />
+          Quittance checks it before the money moves.
         </h1>
-        <div className="max-w-3xl space-y-3 text-frost">
+        <div className="max-w-2xl space-y-3 text-base text-frost">
           <p>
             Agents already pay per call over x402. Nothing measures whether the call was
             answered.

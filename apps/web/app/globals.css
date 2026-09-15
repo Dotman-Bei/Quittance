@@ -64,7 +64,8 @@
 
   --container-page: 1280px;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
 
   /* Animation — frontend.txt §2 */
   --animate-float-slow: float 6s ease-in-out infinite;
@@ -140,6 +141,18 @@ body {
 }
 .glass-card:hover {
   border-color: rgba(196, 255, 13, 0.4);
+}
+
+/*
+ * Display headline. Heavy, tight, and optically sized down as the viewport narrows so the
+ * two lines never collide with the container edge.
+ */
+.display {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: var(--color-stark);
+  text-wrap: balance;
 }
 
 /* Monospace for every number, tabular so columns align. */

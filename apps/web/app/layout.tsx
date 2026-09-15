@@ -1,9 +1,24 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import "./globals.css";
+
+/*
+ * Inter, through next/font so it is self-hosted and subset at build time — no third-party
+ * request at render, and no layout shift from a late swap.
+ *
+ * Weight 800 with tight tracking is what gives the display headline its density; the same
+ * family carries body copy at 400/500, so the page needs one family rather than two.
+ */
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Quittance",
@@ -13,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>
         {/* frontend.txt §1 ambient radial glow. Decorative, behind everything. */}
         <div className="ambient-glow" aria-hidden />
