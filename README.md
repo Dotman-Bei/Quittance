@@ -54,9 +54,10 @@ run, and nothing else.
 
 | # | Evidence | Status | Where |
 |---|---|---|---|
-| 1 | First fee executed through KeeperHub, explorer link + run id | **not executed** — needs a funded buyer wallet | — |
-| 2 | First recorded non-discharge against a live endpoint | **not executed** | — |
-| 2a | Full gate pipeline exercised against a live seller, receipt re-derived | **done, 2026-09-15** | `apps/gate`, verified with `quittance verify` |
+| 1 | First fee executed through KeeperHub, explorer link + run id | **done, 2026-09-15** | [`0x015f4520…`](https://basescan.org/tx/0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852) · block 51,349,475 |
+| 2 | First recorded non-discharge **against a live third-party endpoint** | **NOT DONE** — see below | — |
+| 2a | Duplicate settlement produces exactly one discharge | **done, 2026-09-15** | [`0xa65b14a8…`](https://basescan.org/tx/0xa65b14a881352663f343506be15cdad4f9fbf467cac0ebf928479bcff2386ccd) · `idempotentReplay: true` |
+| 2b | All five failure shapes drive the correct verdict | **done** — 5 of 5 | `PROJECT_BASELINE`, not third-party |
 | 3 | Sustained campaign totals, failures included | **not run** | — |
 | 4 | Induced infrastructure failure survived | **not run** | — |
 | 5 | Receipt batch anchor tx | **not deployed** | — |
@@ -64,8 +65,14 @@ run, and nothing else.
 | 7 | `verdict()` pure and total over generated envelopes | **done**, 41 tests | `pnpm test` |
 
 Claims and their evidence rungs live in
-[`packages/claim-ledger/data/claims.json`](packages/claim-ledger/data/claims.json). One claim is at
-R1 (covered by tests). Six are at R0 (asserted in a document). None is above its evidence.
+[`packages/claim-ledger/data/claims.json`](packages/claim-ledger/data/claims.json), rendered to
+[`docs/claims.md`](docs/claims.md). **Three claims are at R2** (executed live, receipt recorded);
+four remain at R0. None is above its evidence.
+
+**No non-discharge against a live third-party endpoint has been recorded.** Every non-discharge so
+far was either produced by our own labelled endpoint, or was self-inflicted — the gate sent a bare
+GET to an endpoint that needed query parameters, and to another that was POST-only. Called correctly,
+both deliver. That is not a seller failing, so **C-004 stays at R0** and G4 is not passed.
 
 ### What the probe run found
 
@@ -103,17 +110,23 @@ No account, no API key, no funds. From a clean clone:
 git clone <repo> quittance && cd quittance
 pnpm install
 pnpm build
-pnpm test          # 41 tests: verdict purity and totality, canonicalization, re-derivation
+pnpm test          # 51 tests: verdict purity and totality, canonicalization, re-derivation, service state
 ```
 
-Re-derive a receipt with the standalone verifier, which never contacts us:
+Re-derive a real receipt with the standalone verifier, which never contacts us:
 
 ```bash
-node packages/verifier/dist/cli.js verify <receipt.json> [--body <response-file>]
+# every receipt in the corpus, re-derived from a fresh clone
+for f in evidence/receipts/*.json; do
+  node packages/verifier/dist/cli.js verify "$f" || echo "MISMATCH: $f"
+done
 # exit 0 = re-derives · exit 1 = does not · exit 2 = usage or input error
 ```
 
-`evidence/receipts/` is empty, because no receipt has been produced.
+`evidence/receipts/` holds the published corpus — real receipts from real gated calls against
+live third-party x402 endpoints on Base mainnet. Each file is named by its own leaf hash, so you can
+confirm the name by hashing the canonicalized contents yourself. A receipt carrying a
+`dischargeTxHash` can be checked against the chain on BaseScan without asking us anything.
 
 Read live advertised terms yourself. Targets are configuration; there is no default and there never
 will be one, because a compiled-in seller URL is exactly the dated protocol fact this project forbids:
@@ -136,7 +149,59 @@ Browse the surfaces:
 pnpm web             # http://localhost:3000
 ```
 
-Every surface will be empty and will say so. That is the accurate state, not a loading condition.
+## Run a gated call yourself
+
+This is the only part that needs anything of your own: a wallet with USDC on Base that can sign
+EIP-712, and a KeeperHub account. **We supply neither, deliberately** — the buyer is a separate actor
+(§7) and holds its own key, and this codebase contains no signer (§12, P4).
+
+```bash
+cp .env.example .env      # then fill in the values named there
+```
+
+You need:
+
+| Variable | What it is |
+|---|---|
+| `KEEPERHUB_API_BASE_URL` | `https://app.keeperhub.com` |
+| `KEEPERHUB_API_KEY` | An organisation key (`kh_` prefix) with `mcp:write` scope. `mcp:read` can simulate but cannot broadcast |
+| `GATE_FEE_RECIPIENT` | Your KeeperHub organisation wallet address — the fee is paid to it |
+| `GATE_FEE_ATOMIC` | The fee, in atomic units of the asset the buyer authorises |
+| `RPC_URL_READONLY` | A read-only Base RPC. Used to resolve a token proxy's implementation so its ABI is read at runtime, never compiled in (§17) |
+
+Then start the gate and ask it for a quote:
+
+```bash
+pnpm --filter @quittance/gate build
+node apps/gate/dist/index.js        # :8787
+
+curl -s localhost:8787/health | jq
+curl -s -X POST localhost:8787/quote -H 'content-type: application/json' -d '{
+  "url": "https://<a-live-x402-resource>",
+  "intent": {"maxPriceAtomic":"5000","maxLatencyMs":20000,"retain":"full",
+             "authorizationNonce":"demo-1","authorizationExpiry":1893456000}}' | jq
+```
+
+The quote hands back the seller's own 402 and refuses, before any purchase, if the advertised price
+exceeds your cap. To complete the call you sign two EIP-3009 authorizations with **your** wallet —
+one paying the seller, one authorising the fee — and POST them to `/call`. The gate relays your
+payment, observes the response, computes the verdict, and asks KeeperHub to execute the fee **only**
+on `DELIVERED_AS_ADVERTISED`.
+
+The gate never signs anything and never pays the seller.
+
+### The adversarial endpoint
+
+To watch every verdict state fire without hunting for a broken seller, run our own labelled endpoint:
+
+```bash
+pnpm --filter @quittance/baseline build
+BASELINE_ASSET=<asset> BASELINE_NETWORK=eip155:8453 BASELINE_PAY_TO=<addr>   node apps/baseline/dist/index.js   # :8788
+```
+
+It serves `/baseline/{ok,empty,mime,slow,fail}`. **Every run against it is labelled
+`PROJECT_BASELINE`** and is never third-party adoption or market demand. It does not settle the
+purchase leg.
 
 ## Repository layout
 
