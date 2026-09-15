@@ -665,3 +665,86 @@ on the landing page.
 A **funded buyer wallet that can sign EIP-712**, and a **KeeperHub API key**. Both are the owner's:
 the moment the gate holds a buyer wallet, P4 falls. With those two, G3 and G4 are a short step — the
 pipeline above already runs; only a valid payment and a configured executor are missing.
+
+---
+
+## 2026-09-15 · Mainnet fee leg validated by simulation · **step 1 of D-010 passes**
+
+### Credentials
+
+Owner supplied the KeeperHub organisation wallet `0x77Ca…E3F8` and an API key. Both are in `.env`
+(mode 600, gitignored, untracked). §17: the address is **configuration** — `.env.example` carries the
+name `GATE_FEE_RECIPIENT` with no value, and no address literal exists in `apps/` or `packages/`.
+
+On-chain check of the fee recipient before wiring it: valid EIP-55 checksum, **EOA** (correct for a
+Turnkey wallet), **0 ETH, 0 transactions** — brand new. It broadcasts the fee, so it pays that gas
+unless sponsorship covers it, and `gas.md` is explicit: *"it fails if that wallet has no native
+balance."* Flagged to the owner.
+
+### Step 1 result: the fee leg works, end to end
+
+| Check | Result |
+|---|---|
+| `GET /api/keys` with the key | **HTTP 200** — authenticates |
+| READ `balanceOf(feeRecipient)` on Base USDC via `POST /api/execute/contract-call` | **`{"result":"0"}`**, HTTP 200 |
+| SIMULATE `transferWithAuthorization` with a dummy signature | **reverts at `ECRecover: invalid signature 'v' value`** |
+
+The simulate is the result that matters. Calldata selector `0xcf092995`, `from` the organisation
+wallet, `to` the USDC contract, and a revert at **exactly** the point a dummy signature should fail.
+The whole fee path is correct; only a real buyer signature is missing.
+
+The USDC address was not typed in: it was read from a **live seller's own 402** (§17), and
+independently matches the Base USDC contract KeeperHub's own documentation allowlists.
+
+### Three findings, all from doing it rather than reading about it
+
+**1. KeeperHub's ABI auto-fetch returns the PROXY ABI for USDC.** Five functions — `admin`,
+`changeAdmin`, `implementation`, `upgradeTo`, `upgradeToAndCall` — and **no
+`transferWithAuthorization`**. The documentation says `abi` is optional and auto-fetched; for a proxy
+token that produces a call the fetched ABI does not describe. **We must always supply it.**
+
+**2. The implementation is not at the EIP-1967 slot.** That slot reads zero. Circle's FiatTokenProxy
+uses the older zeppelinos slot, resolving to `0x2ce6311d…`, whose ABI exposes **two** overloads. x402
+specifies "the 65-byte signature", so the seven-argument `bytes` form is correct — which is what the
+gate already used. Confirmed rather than discovered, which is the right order.
+
+**3. Our own §17 checker flagged the proxy storage slots as private keys.** They are 64 hex
+characters and match the key-shaped pattern. They are not keys: they are standard, versionless
+constants.
+
+Rather than loosen the checker's regex — a silent carve-out, which `AGENTS.md` forbids — the checker
+now accepts a `§17-ok: <reason>` annotation and **prints every exemption on every run**. Two exist,
+both stating their standard and preimage. An exemption that must justify itself and is reported
+aloud is auditable; a regex hole is not.
+
+### What was built
+
+`apps/gate/src/abi.ts` — resolves the token implementation through both proxy layouts, falls back to
+the asset itself for a non-proxy token, fetches the ABI from KeeperHub, extracts the seven-argument
+fragment, and caches per `chainId:asset`. **If no such function can be read, the fee is not
+attempted** — it is never guessed, and the failure is reported as our inability to execute rather
+than as a delivery failure.
+
+Recorded as **D-011**, with its costs: a new runtime dependency on `RPC_URL_READONLY` on the money
+path, two round trips before the first fee on a new asset, and no support for tokens behind a third
+proxy layout.
+
+### Commands run
+
+| Command | Outcome |
+|---|---|
+| `GET /api/keys` | HTTP 200 |
+| `POST /api/execute/contract-call` (read `balanceOf`) | HTTP 200, `{"result":"0"}` |
+| `GET /api/chains/8453/abi?address=<USDC>` | HTTP 200 — **proxy ABI, wrong one** |
+| `eth_getStorageAt` EIP-1967 slot | zero |
+| `eth_getStorageAt` zeppelinos slot | `0x2ce6311d…` |
+| `GET /api/chains/8453/abi?address=<impl>` | HTTP 200, two overloads |
+| `POST …/contract-call` with explicit ABI + `simulate: true` | reverts at `ECRecover`, as designed |
+| Runtime resolver, twice | resolves, and caches on the second call |
+| `pnpm typecheck` / `test` / `claim:verify` / `skills:verify` | exit 0 |
+| `pnpm probe:all` | **G1: PASSED**, 2 exemptions printed |
+
+### What is still missing for G3
+
+**A funded buyer wallet that can sign EIP-712.** That is the only remaining input. The fee path is
+proven; a real signature replaces the dummy one and the transaction lands.

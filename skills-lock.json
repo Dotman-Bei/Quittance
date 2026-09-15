@@ -119,6 +119,12 @@
           "bytes": 943
         },
         {
+          "sourcePath": "docs/wallet-management/gas.md",
+          "vendoredPath": ".agents/skills/keeperhub/references/gas.md",
+          "sha256": "03f811ee99bdc43688c64ced7cb6f1af8462855a10a6655c662285fe16be114e",
+          "bytes": 7863
+        },
+        {
           "sourcePath": "docs/wallet-management/turnkey.md",
           "vendoredPath": ".agents/skills/keeperhub/references/turnkey-wallet.md",
           "sha256": "d759a8546efd2760652d87dc9171e385e38bffdb2d488057c646c20df406351a",

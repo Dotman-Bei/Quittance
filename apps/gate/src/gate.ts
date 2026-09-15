@@ -23,6 +23,7 @@ import {
 } from "@quittance/protocol-types";
 import { verdict } from "@quittance/reference";
 import { execute, readConfig, chainIdFromCaip2, type ExecuteOutcome } from "./keeperhub.js";
+import { transferWithAuthorizationAbi } from "./abi.js";
 
 const V2_HEADER = "payment-required";
 /* The header the buyer's wallet produces, per the pinned x402 transport specs. */
@@ -284,11 +285,41 @@ async function executeFee(
     return { ok: false, reason: `unsupported CAIP-2 network ${fee.network}`, httpStatus: null };
   }
 
+  const rpcUrl = process.env["RPC_URL_READONLY"] ?? "";
+  if (rpcUrl.length === 0) {
+    return {
+      ok: false,
+      reason: "RPC_URL_READONLY is not set; the ABI cannot be resolved at runtime and §17 forbids compiling one in",
+      httpStatus: null,
+    };
+  }
+
+  /*
+   * §17: the ABI is read from the deployed contract, never compiled in. KeeperHub's
+   * auto-fetch returns the PROXY ABI for USDC, which does not expose this function, so
+   * omitting `abi` here would produce a call the contract does not have.
+   */
+  const abi = await transferWithAuthorizationAbi({
+    keeperhubBaseUrl: config.baseUrl,
+    apiKey: config.apiKey,
+    rpcUrl,
+    chainId,
+    asset: fee.asset,
+  });
+  if (abi === null) {
+    return {
+      ok: false,
+      reason: `could not read a 7-argument transferWithAuthorization from ${fee.asset} on chain ${chainId}; the fee is not attempted rather than guessed`,
+      httpStatus: null,
+    };
+  }
+
   return execute(
     config,
     {
       contractAddress: fee.asset,
       chainId,
+      abi,
       functionName: "transferWithAuthorization",
       functionArgs: JSON.stringify([
         fee.from,

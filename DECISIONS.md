@@ -728,3 +728,62 @@ as progress against the main-track thesis is reading it wrong, and the labelling
 costs nothing and needs only an API key, so it is unconditionally worth doing. Step 2 is worth doing
 only if a mainnet buyer wallet is not ready; if it is ready, go straight to step 3 and use
 `simulate: true` as the safety net instead.
+
+---
+
+## D-011 · The token ABI is resolved at runtime, because auto-fetch returns the wrong one · 2026-09-15 · active
+
+### What was decided
+
+The `transferWithAuthorization` ABI fragment is **resolved from the deployed contract at call
+time**, never compiled in and never left to KeeperHub's auto-fetch.
+
+### What evidence forced it
+
+Bringing the fee leg up against Base mainnet, in order:
+
+1. **KeeperHub's ABI auto-fetch returns the PROXY ABI for USDC.** `GET /api/chains/8453/abi?address=<USDC>`
+   returns five functions — `admin`, `changeAdmin`, `implementation`, `upgradeTo`, `upgradeToAndCall`
+   — and **no `transferWithAuthorization`**. USDC is a proxy; the explorer returns the proxy's own
+   ABI. Omitting `abi` from the request, as the documentation permits, would produce a call to a
+   function the fetched ABI does not describe.
+
+2. **The implementation is not at the EIP-1967 slot.** Reading
+   `0x360894a1…` returned zero. Circle's FiatTokenProxy uses the older OpenZeppelin slot
+   `0x7050c9e0…`, which resolves to `0x2ce6311ddae708829bc0784c967b7d77d19fd779`.
+
+3. **That implementation exposes two overloads**, confirmed by reading its ABI:
+   `transferWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)` and the
+   nine-argument `v, r, s` form. x402's exact-EVM scheme specifies *"the 65-byte signature"*, so the
+   seven-argument form is the correct one. Our call already used it; this confirms it rather than
+   discovering it.
+
+4. **A simulate with a dummy signature reverted at exactly the right place**:
+   `ECRecover: invalid signature 'v' value`, with calldata selector `0xcf092995` and
+   `from` the organisation wallet. The path is correct end to end; only a real buyer signature is
+   missing.
+
+### Why not simply paste the fragment into the source
+
+Because §17 says no ABI is compiled in, and this is exactly the failure that rule anticipates: a
+pasted fragment is correct until the token is upgraded behind its proxy, and then it is silently
+wrong while still compiling. `resolveImplementation` reads both proxy slots and falls back to the
+asset itself for a non-proxy token; the result is cached per `chainId:asset`.
+
+If no seven-argument `transferWithAuthorization` can be read, **the fee is not attempted.** It is not
+guessed, and the failure is reported as our inability to execute rather than as a delivery failure.
+
+### What it costs
+
+**Cost 1 — the fee leg now depends on a read-only RPC.** `RPC_URL_READONLY` must be set or the ABI
+cannot be resolved and no fee executes. That is a new runtime dependency on the money path, and it
+fails closed.
+
+**Cost 2 — two round trips before the first fee on a new asset.** One `eth_getStorageAt`, one ABI
+fetch. Cached afterwards, so it is once per asset per process, but it is latency on the money path
+that a compiled-in fragment would not have.
+
+**Cost 3 — a token behind an unrecognised proxy pattern will not be chargeable.** We read two slots.
+A token using a third layout resolves to itself, its ABI will not contain the function, and the fee
+will refuse rather than guess. That is the correct failure, and it means asset support is narrower
+than "any EIP-3009 token".

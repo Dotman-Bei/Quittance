@@ -50,8 +50,23 @@ function walk(dir: string): readonly string[] {
   return out;
 }
 
-function addressLiteralCheck(): { readonly ok: boolean; readonly scanned: number; readonly hits: readonly string[] } {
+/*
+ * A line may be exempted with a trailing `§17-ok: <reason>` annotation, and every exemption
+ * is COUNTED AND PRINTED so it cannot hide. This exists because a 32-byte constant is not
+ * necessarily a key: EIP-1967 and zeppelinos proxy storage slots are 64 hex characters and
+ * are standard, versionless constants. An annotation that must state its reason and is
+ * reported on every run is auditable; a regex carve-out in the checker is not.
+ */
+const EXEMPTION = /§17-ok:\s*(.+)$/;
+
+function addressLiteralCheck(): {
+  readonly ok: boolean;
+  readonly scanned: number;
+  readonly hits: readonly string[];
+  readonly exemptions: readonly string[];
+} {
   const hits: string[] = [];
+  const exemptions: string[] = [];
   let scanned = 0;
 
   for (const root of SCANNED_ROOTS) {
@@ -61,12 +76,18 @@ function addressLiteralCheck(): { readonly ok: boolean; readonly scanned: number
       const lines = readFileSync(file, "utf8").split("\n");
       lines.forEach((line, i) => {
         for (const { name, re } of PATTERNS) {
-          if (re.test(line)) hits.push(`${rel}:${i + 1}: ${name}`);
+          if (!re.test(line)) continue;
+          const exempt = EXEMPTION.exec(line);
+          if (exempt !== null) {
+            exemptions.push(`${rel}:${i + 1}: ${name} — ${exempt[1]?.trim() ?? ""}`);
+          } else {
+            hits.push(`${rel}:${i + 1}: ${name}`);
+          }
         }
       });
     }
   }
-  return { ok: hits.length === 0, scanned, hits };
+  return { ok: hits.length === 0, scanned, hits, exemptions };
 }
 
 /* ------------------------------------------------------------------ *
@@ -84,6 +105,7 @@ async function main(): Promise<void> {
     console.log("      no files scanned — apps/ and packages/ are empty in this checkout");
   } else if (literals.ok) {
     console.log(`      clean: ${literals.scanned} files, no compiled-in protocol fact`);
+    for (const e of literals.exemptions) console.log(`      EXEMPT ${e}`);
   } else {
     failed = true;
     console.log(`      FAIL: ${literals.hits.length} hit(s) across ${literals.scanned} files`);
