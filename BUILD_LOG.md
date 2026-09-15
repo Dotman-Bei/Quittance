@@ -454,3 +454,100 @@ and G7's live half remains blocked on D-007 like everything else.
 ### Next
 
 Unchanged, and now urgent: **a D-007 decision.** Option C is the only one reachable inside three days.
+
+---
+
+## 2026-09-15 · Submission scaffolding · the four things that move without an owner decision
+
+### What was done
+
+With G3/G4/G5/G6/G10 blocked on D-007 and K8 already fired, the only remaining work that advances
+anything is G9's. Four items, all delivered.
+
+### 1. `docs/claims.md` is now generated (§21)
+
+§21 says the file "is generated from it and never hand-edited". It did not exist and there was no
+generator. `scripts/claims-generate.mjs` renders it from `claims.json`, and `--check` mode fails when
+the file is stale or was hand-edited. **CI now runs `--check`**, so a claim that no longer traces to
+the ledger fails the build.
+
+### 2. `pnpm submission:check` exists (§22 G9)
+
+Seven rows: public repository, demo video, transaction + run id, form answers, contact, claims
+honest, upstream report filed. It **never reports a pass on a row it could not check** — an
+unverifiable row is a failure, because the point of G9 is to catch the artifact a team forgot rather
+than to reassure it.
+
+Current state: **2 of 7**. Passing: form answers drafted, claims honest.
+
+### 3. `docs/submission.md` — §24 form answers, failure answer first
+
+§24 requires the "what still breaks" answer to be written **before** the video, so the video cannot
+become more confident than the build. It is written, in seven numbered points, and it leads with the
+reason there is no transaction: D-007.
+
+Two answers are deliberately uncomfortable and stay that way:
+
+- **KeeperHub surfaces** — only the chain list is listed as *used*. Every other surface sits in a
+  separate "designed and not yet executed" table. Nothing moves to "used" until it has executed once.
+- **Testnet or mainnet** — the answer is **neither**. No transaction has been broadcast on any
+  network, so there is no testnet claim to make either.
+
+### 4. Git repository initialised
+
+**`git init` had never been run.** §24's first row is "Source code — public repository, judged at
+repository level". Everything else could have landed perfectly and the submission would still have
+failed on this.
+
+One commit, 158 files, citing the PRD sections per §0.1.
+
+Pre-commit audit: **0** files from `node_modules/`, `internal/`, `.env`, `.next/`, `dist/`. A secret
+scan for private-key-shaped literals, `kh_`/`wfb_`/`sk-` prefixed keys and PEM blocks found nothing
+in our source. The only address literals anywhere are inside vendored upstream documentation — that
+is third-party text, not our source, and the §17 check scans `apps/` and `packages/`.
+
+`apps/web/test-results/` was caught staged and added to `.gitignore`; CI uploads traces as artifacts
+instead.
+
+**Not pushed.** There is no remote, and pushing is outward-facing.
+
+### Files created
+
+`scripts/claims-generate.mjs`, `scripts/submission-check.mjs`, `docs/claims.md` (generated),
+`docs/submission.md`.
+
+**Modified** — `package.json` (`claims:generate`, `submission:check`), `.gitignore`,
+`.github/workflows/ci.yml` (claims.md sync check; G9 report, `continue-on-error` until the submission
+is complete).
+
+### Commands run
+
+| Command | Outcome |
+|---|---|
+| `pnpm claims:generate` | wrote `docs/claims.md`, 7 claims |
+| `node scripts/claims-generate.mjs --check` | exit 0, in sync |
+| `pnpm submission:check` | **exit 1, 2 of 7 rows** — correct, and correct to fail |
+| Secret scan over 158 staged files | clean |
+| `git init` + commit | 1 commit, working tree clean |
+
+One bug found and fixed in my own checker: the form-answer matcher missed a heading because of a
+comma. Fixed by normalising punctuation in the matcher rather than contorting the document to satisfy
+it.
+
+### What this did not do
+
+No rung moved. No gate closed. G9 went from 1 row to 2 of 7, and the three rows that matter most —
+transaction, video, public remote — are still open. Two of those three are owner actions; the third
+is D-007.
+
+### Still needed, and from whom
+
+| Row | Who |
+|---|---|
+| D-007 decision → transaction link | **OWNER** |
+| Mainnet USDC + KeeperHub API key | **OWNER** |
+| Public remote, then push | **OWNER** |
+| Demo video per §23, failure path first | **OWNER** |
+| Contact: email + X/Discord handle | **OWNER** |
+| File the upstream report, remove its DRAFT marker | **OWNER** |
+| §2 eligibility confirmation | **OWNER DECISION** |

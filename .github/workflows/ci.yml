@@ -268,5 +268,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      - name: docs/claims.md is generated, not hand-edited
+        # §21: "docs/claims.md is generated from it and never hand-edited."
+        run: node scripts/claims-generate.mjs --check
+
       - name: claim:verify
         run: pnpm claim:verify
+
+      - name: G9 submission package
+        # Reports the true state of every §24 artifact. Expected to fail until the
+        # submission is complete; it is informational until then, and the report is the
+        # point — it names the artifact a team would otherwise forget.
+        continue-on-error: true
+        run: pnpm submission:check
