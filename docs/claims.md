@@ -18,15 +18,15 @@ in the same commit or neither lands.
 
 ## Current state
 
-**7 claims — R0=5 · R1=1 · R2=1**
+**7 claims — R0=4 · R2=3**
 
 | id | Claim | Now | Target | Phase | Gates |
 |---|---|---|---|---|---|
-| C-001 | A discharge fires only on DELIVERED_AS_ADVERTISED | **R1** | R4 | P1 | G2 |
+| C-001 | A discharge fires only on DELIVERED_AS_ADVERTISED | **R2** | R4 | P1 | G2 |
 | C-002 | Any stranger can re-derive a published verdict from the receipt and the chain | **R0** | R4 | P1 | G2, G7 |
 | C-003 | Value moved through KeeperHub, triggered by a call to a live listed endpoint | **R2** | R3 | P2 | G3 |
 | C-004 | Non-delivery against a live endpoint was recorded and the discharge did not execute | **R0** | R2 | P2 | G4 |
-| C-005 | A duplicate settlement attempt does not produce a second discharge | **R0** | R3 | P3 | G10 |
+| C-005 | A duplicate settlement attempt does not produce a second discharge | **R2** | R3 | P3 | G10 |
 | C-006 | The system survived an induced infrastructure failure and recovered | **R0** | R2 | P3 | G6 |
 | C-007 | Endpoint delivery records are computed from receipts, not from seller-reported metadata | **R0** | R3 | P3 | G5 |
 
@@ -34,7 +34,7 @@ in the same commit or neither lands.
 
 ### C-001 — A discharge fires only on DELIVERED_AS_ADVERTISED
 
-**Rung:** R1 (target R4) · **Phase:** P1
+**Rung:** R2 (target R4) · **Phase:** P1
 **Kill criteria in scope:** K4
 
 **Evidence:**
@@ -42,8 +42,11 @@ in the same commit or neither lands.
 - `pnpm test:properties` — reaches R1
   - `packages/reference/test/verdict.properties.test.ts`
   - fast-check over 2000 generated envelopes per property: verdict() is total and enumerated; isDischargeEligible is true for DELIVERED_AS_ADVERTISED and for no other state; gate_error, settlement_failed, a zero-byte body, a non-2xx status, and a price above the intent cap are each never discharge-eligible.
+- `node internal/buyer/adversarial.mjs` — reaches R2
+  - `evidence/receipts/`
+  - Executed against live third-party endpoints on Base mainnet: every DELIVERED_AS_ADVERTISED receipt carries a fee transaction and every non-discharge carries none. The adversarial suite additionally drove all five failure shapes against a controlled endpoint — empty body, wrong mime type, 502 after payment, slow past the buyer's cap, and the delivering control — and the verdict matched the expected state in 5 of 5, with a fee transaction on the control only.
 
-**Notes.** R1 covers the DECISION FUNCTION only. The gate that acts on it is P2 and does not exist, so no discharge has been fired or withheld in reality. R2 requires a live third-party call. Narrowed by D-002: against a seller publishing neither mimeType nor schema the structural check is status plus non-empty body, plus the buyer's latency bound.
+**Notes.** R2 reached. R4 still requires re-derivation from a fresh clone with no access to our database. Narrowed by D-002 and D-005: against a seller publishing neither a mimeType nor a schema the structural check is status plus non-empty body, plus the buyer's latency bound. The adversarial suite's failure shapes were produced by OUR OWN endpoint and are labelled PROJECT_BASELINE; they evidence the verdict function, not third-party behaviour.
 
 ### C-002 — Any stranger can re-derive a published verdict from the receipt and the chain
 
@@ -82,12 +85,16 @@ in the same commit or neither lands.
 
 ### C-005 — A duplicate settlement attempt does not produce a second discharge
 
-**Rung:** R0 (target R3) · **Phase:** P3
+**Rung:** R2 (target R3) · **Phase:** P3
 **Kill criteria in scope:** K5, K7
 
-**Evidence:** none. This claim is asserted in a document and nothing more.
+**Evidence:**
 
-**Notes.** Must be proven against a live run, not only in unit tests. If K7 fires, campaign totals restart from zero and prior totals are not reused.
+- `node internal/buyer/idempotency.mjs` — reaches R2
+  - `evidence/receipts/`
+  - The same authorization nonce submitted twice produced exactly one discharge. Both attempts returned executionId 5af7vnjtmxkywxtbpn3fj and transaction 0xa65b14a881352663f343506be15cdad4f9fbf467cac0ebf928479bcff2386ccd (block 51350479, SUCCESS on Base mainnet), and the second was marked idempotentReplay: true. Enforced by KeeperHub's documented Idempotency-Key contract keyed on the authorization nonce, used as shipped rather than reimplemented (§8.4).
+
+**Notes.** R2 reached against a live KeeperHub execution on Base mainnet. R3 requires the same property to hold across a sustained window. The run was against our own endpoint and is labelled PROJECT_BASELINE — the claim is about OUR settlement behaviour, not about a third party, so the label does not weaken it. If a duplicate ever produces two discharges, K7 fires: stop the campaign, publish the tx pair, restart the count.
 
 ### C-006 — The system survived an induced infrastructure failure and recovered
 

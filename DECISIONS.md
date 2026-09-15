@@ -787,3 +787,56 @@ that a compiled-in fragment would not have.
 A token using a third layout resolves to itself, its ABI will not contain the function, and the fee
 will refuse rather than guess. That is the correct failure, and it means asset support is narrower
 than "any EIP-3009 token".
+
+---
+
+## D-012 · The fee signature must not trust the seller's advertised EIP-712 domain · 2026-09-15 · active
+
+### What was decided
+
+The **fee** leg's EIP-712 domain is read from the token contract itself, never from the seller's
+advertised `accepts[].extra`. The **purchase** leg continues to use the seller's `extra`.
+
+### What evidence forced it
+
+The adversarial baseline endpoint was written advertising `extra: { name: "USDC", version: "2" }`.
+The Base USDC contract reports its domain name as **`"USD Coin"`**. The buyer signed the fee against
+the advertised domain, and KeeperHub's execution failed:
+
+```
+Error(FiatTokenV2: invalid signature)
+```
+
+read from `GET /api/execute/{executionId}/status` — §8.4's "Executions API … the audit half of every
+receipt", doing exactly that job.
+
+The gate's own classification was **correct**: delivery succeeded, settlement did not, so the verdict
+was `SETTLEMENT_FAILED` and no fee was charged. The mechanism behaved properly while the signer did
+not, which is why the failure was legible at all.
+
+### Why the distinction is not cosmetic
+
+- **Purchase leg**, buyer → seller. The seller's own facilitator verifies this signature against the
+  domain *it* believes in, so the seller's `extra` is the correct source. A seller that advertises a
+  wrong domain breaks its own payment — its problem, surfaced as a delivery failure.
+- **Fee leg**, buyer → gate. **The seller is not a party to it.** Taking the domain from the seller's
+  `extra` lets any seller shape a signature between two other parties: at minimum a denial of the
+  gate's fee, and a category of influence a counterparty should not have over an unrelated
+  authorization.
+
+This was found by a bug in our own test fixture, and the fixture's incorrect advertisement is now
+**kept deliberately** as an adversarial case. The suite passes 5 of 5 *while the seller lies about
+the domain*, which is the property being asserted — not merely that the happy path works.
+
+### What it costs
+
+**Cost 1 — two contract reads per new asset.** `name()` and `version()` are read from the token and
+cached per `chainId:asset`. Without the cache this hammered the RPC hard enough to fail with
+`HTTP request failed` mid-suite, which is how the cost was discovered rather than predicted.
+
+**Cost 2 — a token that exposes no `version()` cannot be used for a fee.** EIP-3009 tokens generally
+do, but a non-conforming one is unsupported rather than guessed at. The failure is loud.
+
+**Cost 3 — the purchase leg keeps the weakness on purpose.** A seller advertising a wrong domain
+still causes a failed purchase. That is the seller's own facilitator rejecting the seller's own
+payment, and it surfaces honestly as a delivery failure rather than being papered over.
