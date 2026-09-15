@@ -17,7 +17,8 @@
     "probe:all": "tsx scripts/probe-all.ts",
     "probe:x402": "tsx -e \"import{probeX402,readTargetsFromEnv,describe}from\\\"./scripts/probe-x402.js\\\";probeX402(readTargetsFromEnv()).then(rs=>rs.forEach(r=>console.log(describe(r))))\"",
     "claims:generate": "node scripts/claims-generate.mjs",
-    "submission:check": "node scripts/submission-check.mjs"
+    "submission:check": "node scripts/submission-check.mjs",
+    "campaign": "tsx scripts/campaign.ts"
   },
   "devDependencies": {
     "typescript": "5.6.3",

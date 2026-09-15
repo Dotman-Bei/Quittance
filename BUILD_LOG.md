@@ -748,3 +748,86 @@ proxy layout.
 
 **A funded buyer wallet that can sign EIP-712.** That is the only remaining input. The fee path is
 proven; a real signature replaces the dummy one and the transaction lands.
+
+---
+
+## 2026-09-15 · **G3 PASSED** · campaign launched · G4 honestly not met
+
+### G3 — a real fee executed through KeeperHub
+
+**`0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852`**
+https://basescan.org/tx/0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852
+
+Triggered by a gated call to `api.onesource.io`, a live third-party x402 resource from the public
+discovery index. **Verified against Base mainnet independently of KeeperHub:** block 51,349,475,
+status SUCCESS, both logs emitted by the real Base USDC contract — `AuthorizationUsed` (EIP-3009
+nonce consumed, authorizer = the buyer) and `Transfer` of 100 atomic USDC from buyer to gate.
+
+**C-003 raised R0 → R2.**
+
+Two facts recorded with it, because both would be easy to state wrongly:
+
+- The value that moves is the **conditional fee** (buyer → gate), not a reimbursement. The purchase
+  leg is paid by the buyer directly and is **not** a KeeperHub execution (D-009).
+- KeeperHub broadcast through a **sponsored relayer**, so `msg.sender` is KeeperHub's relayer, not our
+  organisation wallet — whose ETH balance is **unchanged**. `gas.md` warned that sponsorship changes
+  how the transaction appears on an explorer. The submission must describe it that way.
+
+### G4 — NOT met, and not claimed
+
+Three non-discharges recorded so far. **All three were self-inflicted.**
+
+- Two were ours: one endpoint required query parameters, another was POST-only, and the gate sent a
+  bare GET to both. Called correctly, **both deliver**.
+- The third came from a seller whose bazaar declaration contradicts itself — it mirrors the probing
+  method into `info.input.method` while always declaring `bodyType: "json"` and a body. Probed with
+  GET it declares `method: "GET"` **with a body**, which `fetch` cannot send, so it threw in 1ms.
+
+None of these is a seller failing to deliver. **C-004 stays at R0.** A real G4 needs a seller that
+takes payment and then genuinely fails.
+
+### What that gap produced
+
+The gate now **honours the seller's declared request shape** — method, body, query parameters — and
+**refuses an incoherent declaration at quote time** rather than paying for a call that cannot
+succeed. An explicit `requestShape` overrides it; with `POST`, that endpoint returns 200 and pays.
+
+That is the quote phase doing its job: §8.2 step 2 exists so a buyer never pays for something the
+gate can already tell will fail.
+
+Second upstream finding, alongside the non-integral `amount`: a seller whose discovery metadata is
+method-mirrored rather than declarative, producing a self-contradictory input spec.
+
+### `scripts/campaign.ts` (§14, G5)
+
+Paces gated calls across a window and publishes totals **including every failure**. Design points
+that matter:
+
+- **Transient infrastructure errors are counted apart from every verdict** (§14) — an unreachable
+  gate or a signing failure is ours and never enters an endpoint's delivery record.
+- A **pre-purchase refusal is not a gated call.** Nothing was bought, so it does not enter the
+  delivery denominator — it is reported on its own line.
+- The loop counts **gated calls, not attempts**. Caught in the dry run: 12 attempts produced 11 gated
+  calls because one target no longer charges, and the run failed for a reason unrelated to the
+  mechanism.
+- **The script holds no key and signs nothing.** The buyer is a separate actor (§7); its signer is
+  loaded at runtime from `BUYER_SIGNER_MODULE`, which is configuration.
+
+Dry run: **11 gated calls, 11 discharges, 1 refused before purchase, 0 infrastructure errors.**
+
+### Campaign running
+
+`--min 120 --window 24h --max-price 5000` across **34 distinct live hosts**, launched 16:23 UTC,
+finishing ~16:23 UTC Wednesday — **1d 17h before the deadline**.
+
+Budget: buyer holds 4.95 USDC; 120 calls cost roughly 0.1–0.5 USDC in purchases plus ~0.012 in fees.
+
+### State
+
+| | |
+|---|---|
+| Receipts | 27+ across 23+ distinct third-party hosts |
+| Fee transactions | 24+ |
+| Re-derive | **all of them** |
+| Gates | G1, G3, G8 passed · G2 partial · **G4 not met** · G5 running |
+| Claims | C-003 **R2** · C-001 R1 · five at R0 |
