@@ -551,3 +551,30 @@ is D-007.
 | Contact: email + X/Discord handle | **OWNER** |
 | File the upstream report, remove its DRAFT marker | **OWNER** |
 | §2 eligibility confirmation | **OWNER DECISION** |
+
+### Addendum, same day — two probe bugs found by re-running it
+
+`pnpm probe:all` against the same 46 targets that passed on 2026-09-09 **failed**: 11 READ, 36 FAIL,
+33 of them `UNREACHABLE`, and KeeperHub `UNREACHABLE` too. A single-target run seconds earlier had
+succeeded.
+
+Not ecosystem drift. **The probe was manufacturing its own failures.**
+
+**Bug 1 — unbounded concurrency.** `probeX402` was `Promise.all(targets.map(probeOne))`, opening 46
+simultaneous connections. On a constrained host that exhausts sockets and reports targets unreachable
+that answer fine alone. Bounded to 6 workers. Result: **38 READ, 9 FAIL, G1 PASSED, exit 0.**
+
+**Bug 2 — an outage reported as a protocol change.** `deriveServiceState` mapped *any* KeeperHub
+failure onto `PROTOCOL_CONFIG_CHANGED`. Its own doc comment states the opposite asymmetry — "a target
+that is UNREACHABLE is an outage. The protocol has not changed" — and that rule was applied to x402
+targets but not to KeeperHub. In production this would have stopped the gate for a network blip and
+reported it as the specification having moved. Only `PAYLOAD_DRIFT` now forces
+`PROTOCOL_CONFIG_CHANGED`; an unreachable KeeperHub yields `NOT_PROBED`, which still refuses to gate
+but does not lie about why.
+
+Both bugs were in the failure-handling path, which is the path no green test run exercises. They were
+caught by running the thing again rather than trusting the last green result — the same way D-006's
+two bugs were found.
+
+`packages/reference/test/service-state.test.ts` pins the rule: 11 cases covering minority vs majority
+drift, unreachable sellers, stale index entries, and each KeeperHub failure mode. **Tests: 41 → 51.**

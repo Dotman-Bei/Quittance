@@ -145,8 +145,36 @@ async function probeOne(target: string): Promise<X402ProbeResult> {
   };
 }
 
+/*
+ * Bounded concurrency.
+ *
+ * The first implementation was `Promise.all(targets.map(probeOne))`. Against 46 targets
+ * that opens 46 simultaneous connections, and on a constrained host it exhausts sockets or
+ * DNS and reports 33 of them UNREACHABLE — targets that answer fine when probed alone.
+ *
+ * A probe that manufactures its own failures is worse than no probe: it reported
+ * PROTOCOL_CONFIG_CHANGED, which in production stops the gate, for a purely local reason.
+ */
+const MAX_CONCURRENT = 6;
+
 export async function probeX402(targets: readonly string[]): Promise<readonly X402ProbeResult[]> {
-  return Promise.all(targets.map(probeOne));
+  const results: X402ProbeResult[] = new Array(targets.length);
+  let next = 0;
+
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      const index = next;
+      next += 1;
+      const target = targets[index];
+      if (target === undefined) return;
+      results[index] = await probeOne(target);
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(MAX_CONCURRENT, targets.length) }, () => worker()),
+  );
+  return results;
 }
 
 export function readTargetsFromEnv(): readonly string[] {

@@ -137,8 +137,17 @@ export function deriveServiceState(
     }
   }
 
-  if (keeperhub !== null && !keeperhub.ok && keeperhub.reason !== "NOT_CONFIGURED") {
-    because.push(`KeeperHub: ${keeperhub.reason} — ${keeperhub.detail}`);
+  /*
+   * Asymmetry 1 applies to KeeperHub too, and the first implementation forgot that:
+   * it mapped any KeeperHub failure onto PROTOCOL_CONFIG_CHANGED, so a network outage
+   * was reported as the protocol having changed. An outage is not drift. Only a payload
+   * we cannot parse is drift.
+   *
+   * An unreachable KeeperHub still prevents gating — it is the only path to chain — but
+   * the honest state for that is NOT_PROBED, handled below.
+   */
+  if (keeperhub !== null && !keeperhub.ok && keeperhub.reason === "PAYLOAD_DRIFT") {
+    because.push(`KeeperHub: ${keeperhub.detail}`);
   }
 
   if (because.length > 0) return { state: "PROTOCOL_CONFIG_CHANGED", because };
