@@ -37,7 +37,8 @@ export default async function OverviewPage() {
     <div className="grid gap-12">
       <section className="grid gap-6">
         <h1 className="display max-w-5xl text-5xl sm:text-6xl lg:text-7xl">
-          Delivery measured at the moment of delivery, by something that is not the seller.
+          The gap x402 leaves between verification and settlement, Quittance measures and
+          records.
         </h1>
         <div className="max-w-2xl space-y-3 text-base text-frost">
           <p>
