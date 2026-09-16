@@ -190,6 +190,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
 
+      - name: G2 — verdict determinism and the golden corpus
+        # §22 G2. The property half proves verdict() over generated envelopes; the corpus
+        # half proves the PUBLISHED receipts still re-derive byte-identically. Both of this
+        # project's worst bugs (D-014, D-015) were invisible to every other check.
+        run: pnpm test:properties
+
   # ---------------------------------------------------------------------------
   # §13 "Playwright for /receipt/:hash and /verify."
   # Runs against a production build: `next dev` compiles each route on first request,

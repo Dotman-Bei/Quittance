@@ -932,3 +932,57 @@ were available** so a reader cannot mistake our error rate for theirs.
 ### Corpus
 
 **192 receipts, 174 third-party, 158 fee transactions.** 153 delivered, 21 did not.
+
+---
+
+## 2026-09-16 · G2's corpus half, and a check that can actually fail
+
+### What was built
+
+`packages/reference/test/golden-corpus.test.ts` — eight assertions over every published receipt,
+inside `pnpm test:properties`, which is G2's own command. For each receipt:
+
+1. it parses against the published schema
+2. **its published verdict equals `verdict()` over its own committed inputs**
+3. it canonicalizes byte-identically on a round trip
+4. **its filename is the sha256 of its canonicalized contents** — the filename is a claim, so CI
+   checks the claim
+5. no non-discharge-eligible verdict carries a transaction
+6. no `PROJECT_BASELINE` or `LOCAL_FIXTURE` row sits in the third-party ledger
+
+Plus: the corpus must exist and hold more than 50 receipts.
+
+### Why, specifically
+
+Both of this project's worst bugs were invisible to everything else that runs:
+
+- **D-014** — the gate published `SETTLEMENT_FAILED` over an envelope that re-derives to
+  `DELIVERED_AS_ADVERTISED`. 51 tests passed. Found only by re-deriving the corpus from a clean clone.
+- **D-015** — a test teardown deleted the entire corpus and `git add -A` committed it. Every gate
+  still passed, because nothing checked the corpus was there.
+
+Assertions 2 and 1-plus-existence are those two incidents, turned into checks that fail automatically.
+
+### Proved it can fail
+
+A test that cannot fail is worthless, so each failure mode was injected and the result recorded:
+
+| Injected | Result |
+|---|---|
+| Flip a published verdict | **FAIL** — "every published verdict re-derives from the receipt's own committed inputs" |
+| Attach a transaction to a `NOT_DELIVERED` receipt | **FAIL** — "no receipt records a transaction against a non-discharge-eligible verdict" |
+| Delete the corpus (replay D-015) | **FAIL** — "exists and is not trivially small" |
+
+Corpus restored after each; **61 tests pass** on the real one.
+
+### The count, stated rather than fudged
+
+G2's row reads "500 golden receipts re-derive byte-identically". **We have 193, all re-deriving.**
+
+The "re-derive byte-identically" half is fully met and enforced. The **count is reported, never
+asserted** — failing a build for having fewer real receipts than a target would be a standing
+incentive to manufacture them, and a manufactured receipt is the one thing this corpus must never
+contain. `docs/phase.md` records 193 against a stated 500 rather than claiming G2 outright.
+
+The campaign now running will add ~130 more, reaching roughly 320. Still short of 500, and that will
+be stated too.
