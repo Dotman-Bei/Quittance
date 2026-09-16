@@ -152,17 +152,22 @@ const upstreamDir = join(ROOT, "docs/upstream");
 const drafts = existsSync(upstreamDir)
   ? readdirSync(upstreamDir).filter((f) => f.endsWith(".md"))
   : [];
-const filed = drafts.filter((f) => {
+/*
+ * A superseded draft is neither filed nor outstanding — it is history. Only reports that
+ * are still candidates for filing count toward this row.
+ */
+const live = drafts.filter((f) => !/^#.*SUPERSEDED/im.test(readFileSync(join(upstreamDir, f), "utf8")));
+const filed = live.filter((f) => {
   const t = readFileSync(join(upstreamDir, f), "utf8");
-  return !/DRAFT, NOT FILED|not filed/i.test(t);
+  return !/ready to file|DRAFT, NOT FILED|not filed/i.test(t);
 });
 add(
   "Upstream report filed",
   filed.length > 0,
-  drafts.length === 0
+  live.length === 0
     ? "no report drafted"
-    : `${drafts.length} drafted, ${filed.length} filed`,
-  "outward-facing — the owner files it, then removes the DRAFT marker",
+    : `${live.length} ready to file, ${filed.length} filed (${drafts.length - live.length} superseded)`,
+  "outward-facing — file docs/upstream/2026-09-16-x402-discovery-conformance.md, then replace its 'ready to file' line with the issue URL",
 );
 
 /* ---- report -------------------------------------------------------------- */

@@ -1,4 +1,8 @@
-# Upstream report — DRAFT, NOT FILED
+# Upstream report — SUPERSEDED by 2026-09-16-x402-discovery-conformance.md
+
+> This was the first draft, covering one finding. A second finding arrived on 2026-09-16 and both
+> are now in a single report so there is one thing to file rather than two overlapping ones.
+> Kept because it records what was known when, which is the point of this directory.
 
 **Target:** the operator of `api.hyperextend.xyz`, and secondarily `coinbase/x402` (as a
 specification-conformance observation for the discovery index).

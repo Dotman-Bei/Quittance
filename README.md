@@ -270,11 +270,19 @@ key manager, or an agent framework. One network, done properly, or not claimed.
 
 ## Upstream contributions
 
-One reproducible finding, produced from real friction during the first live probe run, is drafted and
-ready to file: a live seller publishing `accepts[1].amount: "0.111"` where the x402 v2 specification
-requires atomic (integral) token units. Draft:
-[`docs/upstream/`](docs/upstream/2026-09-09-x402-non-integral-amount.md). It has not been filed —
-filing it is an outward-facing action and is the owner's to take.
+Two reproducible findings, both produced from real friction while integrating and **both re-verified
+live on 2026-09-16**:
+
+1. A resource advertises `accepts[1].amount: "0.111"` where x402 v2 requires atomic (integral) token
+   units. A strict validator rejects the whole payload, including the valid offer beside it.
+2. A resource **mirrors the probing method into its bazaar declaration**, so probed with `GET` it
+   declares `method: "GET"` *with* a JSON body — a request no client can send. The declaration is a
+   property of the request rather than of the resource.
+
+Report: [`docs/upstream/2026-09-16-x402-discovery-conformance.md`](docs/upstream/2026-09-16-x402-discovery-conformance.md).
+Each carries a reproduction, the spec line it contradicts, the impact we actually hit, and a
+suggested fix — including two places the specification could say out loud what it currently only
+implies. **Not yet filed:** filing is an outward-facing action and is the owner's to take.
 
 ## Contact
 
