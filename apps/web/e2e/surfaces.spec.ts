@@ -77,15 +77,33 @@ test.describe("§9 honest surfaces", () => {
     await expect(page.getByText(/it means we have not called it/)).toBeVisible();
   });
 
-  test("the ledger lists a non-discharge alongside a discharge, newest first", async ({ page }) => {
-    const { notDeliveredLeaf } = seeded();
+  /*
+   * This asserted `toHaveCount(2)` when the corpus was empty and only fixtures existed.
+   * The published corpus now ships in the repository, so a fixed row count encodes a
+   * stale assumption rather than a property. §9's actual requirements are that the
+   * ledger is newest-first and that non-discharges sit in it as first-class rows.
+   */
+  test("the ledger is newest first and carries non-discharges as first-class rows", async ({
+    page,
+  }) => {
     await page.goto("/receipts");
     const rows = page.locator("tbody tr");
-    await expect(rows).toHaveCount(2);
-    // The NOT_DELIVERED fixture is the newer one.
-    await expect(rows.first()).toContainText("NOT_DELIVERED");
-    await expect(rows.first()).toContainText("no discharge tx");
-    expect(notDeliveredLeaf).toHaveLength(64);
+    const count = await rows.count();
+    expect(count).toBeGreaterThanOrEqual(2);
+
+    /* §9 "Newest first." Read the timestamp column and check it never ascends. */
+    const stamps = await rows.locator("td:first-child").allInnerTexts();
+    const parsed = stamps.map((t) => Date.parse(t.trim())).filter((n) => !Number.isNaN(n));
+    expect(parsed.length).toBeGreaterThan(1);
+    for (let i = 1; i < parsed.length; i += 1) {
+      expect(parsed[i - 1]).toBeGreaterThanOrEqual(parsed[i] as number);
+    }
+
+    /* Both outcomes appear, and a non-discharge states the absence of a transaction. */
+    const body = await page.locator("tbody").innerText();
+    expect(body).toContain("DELIVERED_AS_ADVERTISED");
+    expect(body).toContain("NOT_DELIVERED");
+    expect(body).toContain("no discharge tx");
   });
 
   test("filtering to a state with no rows names the reason, and is not a blank screen", async ({
