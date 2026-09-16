@@ -1,293 +1,303 @@
-# Quittance
+<div align="center">
 
-A quittance is the document certifying that a debt has been discharged.
+<h1>Quittance</h1>
 
-## The problem, plainly
+<p><em>A quittance is the document certifying that a debt has been discharged.</em></p>
 
-An agent pays for an API call over x402. Nothing checks whether the call was answered.
+<h3>Delivery is an assertion. Quittance makes it re-derivable.</h3>
 
-x402 splits payment into two steps: verification checks a signed payload and moves no money;
-settlement broadcasts it and moves the money. The actual work sits between them, and whoever wrote
-the resource server picks the ordering. Either the seller works first and discovers afterwards
-whether settlement lands, or the money moves first and the buyer may be left holding a payment for
-nothing.
+</div>
 
-The current substitute for measurement is reputation metadata: uptime a seller reports, a rank in a
-directory, a star count. All of it is asserted. None of it is derived from whether the last thousand
-paid calls returned anything.
+<p align="center">
+  <img alt="gates" src="https://img.shields.io/badge/acceptance_gates-7_of_10_passing-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="network" src="https://img.shields.io/badge/Base_mainnet-live-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="receipts" src="https://img.shields.io/badge/receipts-201_re--derivable-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="transactions" src="https://img.shields.io/badge/KeeperHub_fee_txs-179-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="tests" src="https://img.shields.io/badge/tests-61_passing-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="licence" src="https://img.shields.io/badge/licence-MIT-white?style=flat-square&labelColor=1a1f0f">
+</p>
 
-## Mechanism
+---
 
-```
-buyer agent  ->  quittance gate: hold signed fee authorization
-             ->  gate relays the BUYER's own x402 payment to the live endpoint
-             ->  hash request, response, and the endpoint's advertised terms
-             ->  verdict = f(advertised terms, observed response)      [pure]
-             ->  KeeperHub executes the fee, or records a non-discharge
-```
+An agent pays for an API call over x402. Nothing checks whether the call was answered. The only
+signals available are ones the seller publishes about itself — uptime it reports, a rank in a
+directory, a star count — none of it derived from whether the last thousand paid calls returned
+anything.
 
-In one sentence: **Quittance measures whether a paid endpoint delivered what it advertised, and
-charges for that measurement only when it did — with the charge executed by KeeperHub.**
+Quittance sits in the gap x402 leaves between verification and settlement, and turns delivery from
+something asserted into something measured.
 
-## Links
+**Read the seller's own terms. Hash what came back. Let a pure function decide. Charge only when it delivered.**
 
-[What is measured](WHAT_IS_MEASURED.md) · [Decisions](DECISIONS.md) · [Architecture](ARCHITECTURE.md) ·
-[Security](SECURITY.md) · [Phase of record](docs/phase.md) · [Kill criteria](docs/kill-criteria.md) ·
-[Build log](BUILD_LOG.md) · [Setup](SETUP.md)
+[Live app](https://quittance-web-3g54.vercel.app) ·
+[Evidence room](evidence/) ·
+[Verify it yourself](TESTING.md) ·
+[Run locally](SETUP.md) ·
+[What is measured](WHAT_IS_MEASURED.md) ·
+[Decisions](DECISIONS.md)
 
-## Why this needs to exist, and why the obvious fix fails
+> **Stage: working build, partial evidence. Read this before anything below.**
+>
+> Seven of ten acceptance gates pass. Value has moved on Base mainnet and the receipts are real.
+> **But:** three of seven claims are still at rung R0 — asserted, not executed. G5's sustained
+> campaign is mid-window. G6 is unbuilt. G7's live half has never been run by a stranger.
+> Facilitator mode and the receipt anchor were **cut** under our own kill criterion, and that is
+> recorded with what it cost.
+>
+> Quittance does **not** protect a buyer. The buyer pays the seller directly; a failed call still
+> costs them the purchase price and we recover nothing. The only thing that changes on a failure is
+> that **we are not paid**. Structural conformance is also a low bar — an endpoint can pass every
+> check here and return content that is useless.
 
-The obvious fix is a smart contract holding the money until the work is confirmed. It does not work.
-Per-call micropayments cannot carry an arbitration process that costs more than the call, and an
+## Demo
+
+> **Not yet recorded.** The script is [TESTING.md](TESTING.md) §1.1 → §1.3, which shows the failure
+> path before the success path. Until the video exists this section says so rather than linking a
+> placeholder.
+
+## Try it without a wallet
+
+Nothing below needs an account, a key, or funds.
+
+| What you want to check | Where | What you should see |
+|---|---|---|
+| The ledger is real | [`/receipts`](https://quittance-web-3g54.vercel.app/receipts) | 201 gated calls against live third-party x402 endpoints |
+| A call that was **not** paid for | filter to `NOT_DELIVERED` | HTTP 502 and **no transaction** — the absence is the evidence |
+| Re-derive a verdict yourself | [`/verify`](https://quittance-web-3g54.vercel.app/verify) | Paste a receipt → it re-derives **in your browser** |
+| That verification needs nothing from us | `/verify`, network disconnected | It still works |
+| We are not flattering ourselves | [`/endpoints`](https://quittance-web-3g54.vercel.app/endpoints) | `INSUFFICIENT SAMPLE` under 20 calls, never a percentage |
+| Money actually moved | [BaseScan](https://basescan.org/tx/0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852) | A USDC transfer that happened because a check passed |
+
+## Contents
+
+- [Why this exists](#why-this-exists)
+- [Architecture](#architecture)
+- [The mechanism, step by step](#the-mechanism-step-by-step)
+- [Live evidence](#live-evidence)
+- [Verify it yourself](#verify-it-yourself)
+- [What is real and what is not](#what-is-real-and-what-is-not)
+- [Engineering decisions and the hard problems](#engineering-decisions-and-the-hard-problems)
+- [Repository map](#repository-map)
+- [Trust boundaries and limitations](#trust-boundaries-and-limitations)
+- [Attribution and licence](#attribution-and-licence)
+
+## Why this exists
+
+x402 splits payment into two steps. **Verification** checks a signed payload and moves no money.
+**Settlement** broadcasts it and moves the money. The actual work sits between them, and whoever
+wrote the resource server picks the ordering — so the buyer's protection is a property of the
+seller's own code.
+
+The obvious fix is a smart contract holding funds until the work is confirmed. It does not work:
+per-call micropayments cannot carry an arbitration process costing more than the call, and an
 on-chain arbiter cannot read an HTTP response body.
 
-The second obvious fix is seller-reported reliability. That is the thing being replaced.
+What is left is an execution problem — hold a signed authorization, run a check anyone can re-run,
+then get one transaction to land reliably. **KeeperHub is that execution layer. Quittance is the
+thin, checkable policy deciding what it executes.**
 
-What is left is an execution problem: hold a signed authorization, run a check that anyone can re-run,
-then get one transaction to land reliably with retries and nonce management. KeeperHub is that
-execution layer. Quittance is the thin, checkable policy deciding what it executes.
+## Architecture
+
+```mermaid
+flowchart LR
+  B["Buyer agent<br/>own wallet, own key"]
+  G["Quittance gate<br/>relay + observer"]
+  S["Live x402 seller<br/>Daydreams-listed"]
+  V["verdict()<br/>pure · total · 7 states"]
+  K["KeeperHub<br/>Turnkey · only path to chain"]
+  R["Receipt<br/>sha256 committed"]
+  A["Anyone<br/>no account, no network"]
+
+  B -->|"1 · intent + caps"| G
+  G -->|"2 · read 402"| S
+  S -->|"advertised terms"| G
+  B ==>|"3 · pays the seller directly"| S
+  G -->|"4 · hash req, res, terms"| R
+  R --> V
+  V -->|"DELIVERED_AS_ADVERTISED"| K
+  V -->|"any other state"| R
+  K ==>|"5 · fee, buyer to gate"| B
+  R -.->|"re-derive"| A
+
+  classDef chain fill:#2d3a1a,stroke:#c4ff0d,color:#fff
+  classDef pure fill:#1a1f0f,stroke:#8bc34a,color:#fff
+  class K,S chain
+  class V,R pure
+```
+
+The thick arrows are the two money movements. **Only the fee is KeeperHub-executed.** The purchase is
+paid and signed by the buyer and broadcast by the seller's own facilitator — it is never described as
+a KeeperHub execution.
+
+## The mechanism, step by step
+
+1. **Intent.** The buyer posts a target, a maximum price, a maximum latency, and a pre-signed fee
+   authorization with a nonce and an expiry.
+2. **Quote.** The gate requests the resource, receives 402, and parses the seller's own terms. If the
+   advertised price exceeds the buyer's cap it refuses **here** — `REQUIREMENTS_MISMATCH`, no
+   purchase, nothing spent.
+3. **Call.** The buyer signs the x402 payment with its own wallet; the gate relays it, honouring the
+   request shape the seller declares. The gate never signs and never pays the seller.
+4. **Commit.** Request, response and raw advertised terms are hashed into a receipt, along with
+   timings, the run context, and **which checks were available at all**.
+5. **Judge.** `verdict(advertised, observed)` runs from the receipt alone — pure, total, seven
+   enumerated states, no clock, no network.
+6. **Settle.** On `DELIVERED_AS_ADVERTISED`, KeeperHub executes the fee as a contract call, keyed for
+   idempotency by the authorization nonce. Every other state records a non-discharge and moves
+   nothing.
+7. **Publish.** The receipt is written under its own leaf hash, so the filename is a checkable claim.
 
 ## Live evidence
 
-**No discharge has executed. No payment has been made.** The table below is what has actually been
-run, and nothing else.
+Real transactions on Base mainnet. Every hash resolves.
 
-| # | Evidence | Status | Where |
-|---|---|---|---|
-| 1 | First fee executed through KeeperHub, explorer link + run id | **done, 2026-09-15** | [`0x015f4520…`](https://basescan.org/tx/0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852) · block 51,349,475 |
-| 2 | First recorded non-discharge **against a live third-party endpoint** | **done, 2026-09-16** | `api.onesource.io` returned 502 after payment. `NOT_DELIVERED`, **no fee charged** |
-| 2a | Duplicate settlement produces exactly one discharge | **done, 2026-09-15** | [`0xa65b14a8…`](https://basescan.org/tx/0xa65b14a881352663f343506be15cdad4f9fbf467cac0ebf928479bcff2386ccd) · `idempotentReplay: true` |
-| 2b | All five failure shapes drive the correct verdict | **done** — 5 of 5 | `PROJECT_BASELINE`, not third-party |
-| 3 | Sustained campaign totals, failures included | **not run** | — |
-| 4 | Induced infrastructure failure survived | **not run** | — |
-| 5 | Receipt batch anchor tx | **not deployed** | — |
-| 6 | Advertised terms read from 38 live x402 sellers | **done, 2026-09-09** | [evidence/probes/](evidence/probes/2026-09-09-g1-probe-run.md) |
-| 7 | `verdict()` pure and total over generated envelopes | **done**, 41 tests | `pnpm test` |
+| Property | Evidence | Rung |
+|---|---|---|
+| Value moved through KeeperHub, triggered by a live listed endpoint | [`0x015f4520…`](https://basescan.org/tx/0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852) · block 51,349,475 | **R2** |
+| A duplicate submission produces **exactly one** discharge | [`0xa65b14a8…`](https://basescan.org/tx/0xa65b14a881352663f343506be15cdad4f9fbf467cac0ebf928479bcff2386ccd) · `idempotentReplay: true` | **R2** |
+| Non-delivery recorded against a live third party, **no fee charged** | `api.onesource.io` → HTTP 502, `dischargeTxHash: null` | **R2** |
+| A discharge fires only on `DELIVERED_AS_ADVERTISED` | 179 fee transactions, 22 non-discharges, zero exceptions | **R2** |
+| Every published verdict re-derives byte-identically | 201 receipts, enforced in CI by `pnpm test:properties` | — |
+| No compiled-in protocol fact | `pnpm probe:all` reads terms live and fails closed | **G1** |
 
-Claims and their evidence rungs live in
-[`packages/claim-ledger/data/claims.json`](packages/claim-ledger/data/claims.json), rendered to
-[`docs/claims.md`](docs/claims.md). **Three claims are at R2** (executed live, receipt recorded);
-four remain at R0. None is above its evidence.
-
-**A non-discharge against a live third-party endpoint has been recorded.** `api.onesource.io`
-returned HTTP 502 after payment on two resources, both called exactly as its own bazaar declaration
-specifies — all four declared query parameters for one, the declared JSON body for the other. Both
-return 402 when probed unpaid, so payment was required and accepted before the failure. Verdict
-`NOT_DELIVERED`, **no fee transaction exists**, and both receipts re-derive independently. The
-absence of a fee is the evidence.
-
-**Read the failure counts carefully.** Of 60 live sellers paid, 13 did not deliver — but **11 of
-those 13 are our fault**, not the sellers': 8 were URLs with unsubstituted path placeholders, and 3
-required an API key the seller openly declares. Only 2 are clean seller failures. A 13-of-60 headline
-would libel 11 endpoints, which is why the endpoint pages show which checks were available rather
-than a bare rate.
-
-### What the probe run found
-
-Across 38 live x402 sellers on Base mainnet, one per distinct host:
-
-- **38/38 speak x402 v2**, carrying terms in the `PAYMENT-REQUIRED` header. No v1 seller was found.
-- **38/38 publish a `mimeType`.** Content type is a real, checkable dimension.
-- **0/38 publish a response schema.** It is not a check we perform against anyone.
-- **`maxTimeoutSeconds` ranges 60–3600s**, 33 of 38 at exactly 300. Nobody advertises a response
-  deadline; that field is a payment window. Reading it as a latency budget, as this project's own
-  spec originally instructed, would have recorded an hour-late response as delivered on time.
-- One seller publishes a non-integral `amount`, which the specification does not permit. See
-  [upstream contributions](#upstream-contributions).
-
-## How this result could be misleading
-
-1. **Structural conformance is a low bar.** An endpoint can pass every check while returning content
-   that is useless. Correctness, accuracy and quality are not measured and are never claimed.
-2. **Nothing here reports on what happens after payment.** Every number above comes from reading 402
-   responses. The thing the product ultimately claims to measure has not been measured once.
-3. **Content type may be a decorative check.** All 38 sellers advertise `application/json`. If that is
-   reflexive rather than meaningful, `SHAPE_MISMATCH` will almost never fire.
-4. **Our own endpoint would inflate any total.** Rows labelled `PROJECT_BASELINE` are ours. They are
-   never third-party adoption and never market demand.
-5. **We choose which endpoints to call.** The set is not a random sample of the ecosystem.
-6. **Under 20 gated calls, no percentage is shown.** A rate over 25 calls is still close to noise.
-
-The long version, written against this project on purpose, is [WHAT_IS_MEASURED.md](WHAT_IS_MEASURED.md).
-
-## Testing this as a judge
-
-**[TESTING.md](TESTING.md)** is the guided path, in increasing order of effort. Steps 1 and 2 need
-nothing at all — no account, no key, no install — and get you from the live site to a verdict
-re-derived in your own browser with the network disconnected.
-
-Live: **https://quittance-web-3g54.vercel.app**
+**201 receipts · 32 distinct hosts · 179 fee transactions · 61 tests.**
+Claims and their rungs: [`docs/claims.md`](docs/claims.md), generated from
+[`claims.json`](packages/claim-ledger/data/claims.json) and never hand-edited.
 
 ## Verify it yourself
 
-No account, no API key, no funds. From a clean clone:
+From a clean clone. No key, no account, no funds.
 
 ```bash
-git clone <repo> quittance && cd quittance
-pnpm install
-pnpm build
-pnpm test          # 51 tests: verdict purity and totality, canonicalization, re-derivation, service state
-```
+git clone https://github.com/Dotman-Bei/Quittance.git && cd Quittance
+pnpm install && pnpm build
 
-Re-derive a real receipt with the standalone verifier, which never contacts us:
-
-```bash
-# every receipt in the corpus, re-derived from a fresh clone
+# every published receipt, re-derived with no access to anything of ours
 for f in evidence/receipts/*.json; do
   node packages/verifier/dist/cli.js verify "$f" || echo "MISMATCH: $f"
 done
-# exit 0 = re-derives · exit 1 = does not · exit 2 = usage or input error
+
+pnpm test            # 61 tests: purity, totality, canonicalization, the golden corpus
+pnpm skills:verify   # re-hash 47 pinned upstream docs — no claim rests on memory
+pnpm claim:verify    # no claim above its evidence, no missing evidence file
 ```
 
-`evidence/receipts/` holds the published corpus — real receipts from real gated calls against
-live third-party x402 endpoints on Base mainnet. Each file is named by its own leaf hash, so you can
-confirm the name by hashing the canonicalized contents yourself. A receipt carrying a
-`dischargeTxHash` can be checked against the chain on BaseScan without asking us anything.
-
-Read live advertised terms yourself. Targets are configuration; there is no default and there never
-will be one, because a compiled-in seller URL is exactly the dated protocol fact this project forbids:
+Read live protocol terms yourself — nothing is compiled in:
 
 ```bash
-export PROBE_X402_TARGETS="https://<a-live-x402-resource>"
+export PROBE_X402_TARGETS="https://api.onesource.io/api/chain/block-number"
 export KEEPERHUB_API_BASE_URL="https://app.keeperhub.com"
 pnpm probe:all
 ```
 
-Confirm the pinned upstream documentation has not drifted:
+The guided path, including a live gated call with your own wallet, is **[TESTING.md](TESTING.md)**.
 
-```bash
-pnpm skills:verify   # re-hashes 46 vendored files against skills-lock.json
-```
+## What is real and what is not
 
-Browse the surfaces:
-
-```bash
-pnpm web             # http://localhost:3000
-```
-
-## Run a gated call yourself
-
-This is the only part that needs anything of your own: a wallet with USDC on Base that can sign
-EIP-712, and a KeeperHub account. **We supply neither, deliberately** — the buyer is a separate actor
-(§7) and holds its own key, and this codebase contains no signer (§12, P4).
-
-```bash
-cp .env.example .env      # then fill in the values named there
-```
-
-You need:
-
-| Variable | What it is |
+| | Status |
 |---|---|
-| `KEEPERHUB_API_BASE_URL` | `https://app.keeperhub.com` |
-| `KEEPERHUB_API_KEY` | An organisation key (`kh_` prefix) with `mcp:write` scope. `mcp:read` can simulate but cannot broadcast |
-| `GATE_FEE_RECIPIENT` | Your KeeperHub organisation wallet address — the fee is paid to it |
-| `GATE_FEE_ATOMIC` | The fee, in atomic units of the asset the buyer authorises |
-| `RPC_URL_READONLY` | A read-only Base RPC. Used to resolve a token proxy's implementation so its ABI is read at runtime, never compiled in (§17) |
+| `verdict()`, receipts, canonicalization, verifier CLI | **real**, 61 tests |
+| Gate service, quote + call, KeeperHub fee execution | **real**, 179 mainnet transactions |
+| Probes reading live x402 and KeeperHub surfaces | **real**, fails closed on drift |
+| Web surfaces, client-side re-derivation | **real**, 30 e2e tests across 5 viewports |
+| Adversarial endpoint (`apps/baseline`) | **real**, and labelled `PROJECT_BASELINE` everywhere |
+| Sustained 24h campaign (G5) | **mid-window** |
+| Recovery under induced failure (G6) | **not built** |
+| Facilitator mode, `ReceiptAnchor` | **cut** under kill criterion K8 — see [D-008](DECISIONS.md) |
+| Third-party adoption | **none.** Nothing here is evidence of demand |
 
-Then start the gate and ask it for a quote:
+There are **no mocks on the public proof path**. Anything from our own endpoint carries
+`PROJECT_BASELINE` and is excluded from every third-party count.
 
-```bash
-pnpm --filter @quittance/gate build
-node apps/gate/dist/index.js        # :8787
+## Engineering decisions and the hard problems
 
-curl -s localhost:8787/health | jq
-curl -s -X POST localhost:8787/quote -H 'content-type: application/json' -d '{
-  "url": "https://<a-live-x402-resource>",
-  "intent": {"maxPriceAtomic":"5000","maxLatencyMs":20000,"retain":"full",
-             "authorizationNonce":"demo-1","authorizationExpiry":1893456000}}' | jq
+Fifteen decisions are recorded in [DECISIONS.md](DECISIONS.md) — append-only, each with what was
+decided, what evidence forced it, and what it costs. The ones worth reading:
+
+**[D-002](DECISIONS.md) / [D-005](DECISIONS.md) — the spec does not say what we needed it to say.**
+x402 advertises **no response-latency SLA** in either version; `maxTimeoutSeconds` is a payment
+window, measured at 60–3600s across live sellers. And v2 removed `outputSchema` without replacing it
+— the bazaar extension's `schema` validates the *discovery metadata*, not the response. So
+`TIMEOUT_EXCEEDED` derives from the **buyer's** deadline, and schema conformance is checked against
+**nobody**.
+
+**[D-007](DECISIONS.md) / [D-009](DECISIONS.md) — the original design could not be built.**
+x402 requires the *payer* to produce an EIP-712 signature, and the only path to chain available here
+refuses to sign to an arbitrary recipient (`403 PAYTO_MISMATCH`). Four options were costed; the one
+chosen inverts the legs and **removes the underwriting story entirely** rather than quietly keeping
+the claim.
+
+**[D-011](DECISIONS.md) — the ABI you are handed is the wrong one.** KeeperHub's ABI auto-fetch
+returns the *proxy* ABI for USDC, which does not expose `transferWithAuthorization`. The
+implementation is not at the EIP-1967 slot either. The ABI is now resolved from the deployed contract
+at runtime; if it cannot be read, the fee is **not attempted** rather than guessed.
+
+**[D-012](DECISIONS.md) — a seller must not shape a signature it is not party to.** The fee's EIP-712
+domain was being taken from the seller's advertised `extra`. A seller advertising `"USDC"` against a
+contract whose domain is `"USD Coin"` broke it. The fee domain now comes from the contract; the
+adversarial fixture keeps lying on purpose, so the suite passing asserts the property.
+
+**[D-014](DECISIONS.md) / [D-015](DECISIONS.md) — the two bugs nothing caught.** One published a
+verdict that could not be re-derived; one deleted the entire receipt corpus from a test teardown and
+committed it. **51 passing tests saw neither.** Both were found by looking from outside — a
+clean-room clone, and a live deployment. Both are now enforced automatically, and the receipts that
+prove the first are [published rather than deleted](evidence/baseline-runs/).
+
+## Repository map
+
 ```
-
-The quote hands back the seller's own 402 and refuses, before any purchase, if the advertised price
-exceeds your cap. To complete the call you sign two EIP-3009 authorizations with **your** wallet —
-one paying the seller, one authorising the fee — and POST them to `/call`. The gate relays your
-payment, observes the response, computes the verdict, and asks KeeperHub to execute the fee **only**
-on `DELIVERED_AS_ADVERTISED`.
-
-The gate never signs anything and never pays the seller.
-
-### The adversarial endpoint
-
-To watch every verdict state fire without hunting for a broken seller, run our own labelled endpoint:
-
-```bash
-pnpm --filter @quittance/baseline build
-BASELINE_ASSET=<asset> BASELINE_NETWORK=eip155:8453 BASELINE_PAY_TO=<addr>   node apps/baseline/dist/index.js   # :8788
-```
-
-It serves `/baseline/{ok,empty,mime,slow,fail}`. **Every run against it is labelled
-`PROJECT_BASELINE`** and is never third-party adoption or market demand. It does not settle the
-purchase leg.
-
-## Repository layout
-
-```
-apps/gate/            buyer-side gate service                      [P2, not built]
-apps/facilitator/     x402 verify/settle surface                   [P4, not built]
-apps/web/             receipts, endpoint records, verify page      [built]
+apps/
+  gate/         quote → relay → observe → judge → settle        Hono
+  baseline/     our own endpoint, configured to fail 5 ways     PROJECT_BASELINE
+  web/          receipts, endpoints, client-side verifier       Next.js
+  facilitator/  cut under K8
 packages/
-  protocol-types/     zod schemas: x402 v1/v2, receipt, verdict    [built]
-  reference/          the pure verdict function                    [built]
-  verifier/           independent re-derivation + CLI              [built]
-  claim-ledger/       claims.json, the source of truth for claims  [built]
-contracts/            ReceiptAnchor only                           [P2, not built]
-scripts/              probes, claim:verify, skills:verify          [probes built]
-docs/                 phase of record, kill criteria, runbooks
-evidence/             probe runs, receipts, campaign output
-.agents/skills/       pinned upstream docs, hashed in skills-lock.json
+  protocol-types/  x402 v1+v2 as discriminated schemas, receipt, canonical JSON, sha256
+  reference/       verdict() — pure, total, seven states
+  verifier/        independent re-derivation + `quittance verify` CLI
+  claim-ledger/    claims.json, the source of truth for every claim
+scripts/
+  probe-x402 · probe-keeperhub · probe-all · campaign · claim-verify · submission-check
+evidence/
+  receipts/       201 published, all re-deriving
+  baseline-runs/  our own runs, kept out of the ledger, including 2 that do not re-derive
+  probes/         live protocol-fact runs
+.agents/skills/   47 pinned upstream docs, hashed in skills-lock.json
 ```
 
-## Limitations, and what is deliberately not claimed
+## Trust boundaries and limitations
 
-**Quittance does not protect the buyer from a failed call.** The buyer pays the seller directly. If
-the endpoint fails to deliver, the buyer is out the purchase price and Quittance does not recover it.
-There is no dispute process, no arbitration, and no recovery. The only thing that changes on a failure
-is that **we are not paid** — we do not charge for measuring a failure. That must never be heard as
-"you are protected".
+**The gate is the only observer of the response bytes**, and it earns a fee when it reports delivery.
+That incentive is real and new — under the abandoned design a false negative cost us a purchase
+price; now it costs a fee, and a false positive earns one. The receipt's commitment to
+`sha256(response)` is the **only** check on it, and it requires someone holding the bytes to bother.
 
-**Only the fee leg is KeeperHub-executed.** The purchase leg is paid and signed by the buyer and
-broadcast by the seller's own facilitator. It is never described as a KeeperHub execution.
+**Structural conformance is a low bar.** Status, non-empty body, declared content type, and a
+deadline the buyer chose. Measured across 38 live sellers: all 38 publish a `mimeType`, **none**
+publishes a response schema. Correctness, accuracy and usefulness are never measured.
 
-**The gate is paid to say delivery succeeded.** It earns a fee on `DELIVERED_AS_ADVERTISED` and
-nothing on any other state. That incentive is real and is checked only by the receipt's commitment to
-`sha256(response)` — a buyer or seller holding the bytes can prove a mismatch. See
-[DECISIONS.md](DECISIONS.md) D-009, Cost 5.
-
-**The gate is a trusted observer of response content.** In gate mode it sees the plaintext request
-and response, and it is the only observer of the response bytes. It cannot lie undetectably — the
-receipt commits to `sha256(response)`, so a seller holding its own logs can publish the body and prove
-a mismatch. That is the entire recourse story and it is a bounded one: it requires the seller to have
-kept logs and to bother.
-
-**Structural checks are not quality checks.** Status, non-empty body, declared content type, and a
-deadline the buyer chose. Nothing else. There is no model in the verdict path and no scoring.
-
-**Facilitator mode has no third-party adopter.** It is not built. If and when it is, every run is
-labelled `PROJECT_BASELINE` until a seller that is not us points at it.
+**Most non-discharges in our own data were our fault.** Of 60 sellers paid, 13 did not deliver — but
+**11 of those were malformed requests from us**, not seller failures. Endpoint pages show which
+checks were available so our error rate cannot be read as theirs.
 
 **Not** an escrow protocol, an arbitration system, a dispute court, a reputation score, a wallet, a
 key manager, or an agent framework. One network, done properly, or not claimed.
 
-## Upstream contributions
+The long version, written against this project on purpose, is
+**[WHAT_IS_MEASURED.md](WHAT_IS_MEASURED.md)**.
 
-Two reproducible findings, both produced from real friction while integrating and **both re-verified
-live on 2026-09-16**:
+## Attribution and licence
 
-1. A resource advertises `accepts[1].amount: "0.111"` where x402 v2 requires atomic (integral) token
-   units. A strict validator rejects the whole payload, including the valid offer beside it.
-2. A resource **mirrors the probing method into its bazaar declaration**, so probed with `GET` it
-   declares `method: "GET"` *with* a JSON body — a request no client can send. The declaration is a
-   property of the request rather than of the resource.
+Built for the KeeperHub Agent Economy Hackathon. Live counterparty: x402 resources listed in the
+public discovery index on Base mainnet.
 
-Report: [`docs/upstream/2026-09-16-x402-discovery-conformance.md`](docs/upstream/2026-09-16-x402-discovery-conformance.md).
-Each carries a reproduction, the spec line it contradicts, the impact we actually hit, and a
-suggested fix — including two places the specification could say out loud what it currently only
-implies. **Not yet filed:** filing is an outward-facing action and is the owner's to take.
+Upstream findings produced from real friction, drafted for filing:
+[`docs/upstream/`](docs/upstream/2026-09-16-x402-discovery-conformance.md) — a resource advertising a
+non-integral `amount`, and one whose discovery declaration changes depending on how you probe it.
 
-## Contact
+Further reading: [PRD.md](PRD.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [SECURITY.md](SECURITY.md) ·
+[AGENTS.md](AGENTS.md) · [docs/phase.md](docs/phase.md) · [docs/kill-criteria.md](docs/kill-criteria.md)
 
-bamigboyeemmanuel401@gmail.com · [@heisbei02](https://x.com/heisbei02)
-
-## Licence
+**Contact** — bamigboyeemmanuel401@gmail.com · [@heisbei02](https://x.com/heisbei02)
 
 MIT.
