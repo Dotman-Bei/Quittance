@@ -16,7 +16,13 @@ export const dynamic = "force-dynamic";
 export default async function OverviewPage() {
   const { receipts, unreadable } = await loadReceipts();
 
-  const rows: readonly EvidenceRow[] = receipts.slice(0, 25).map((r) => ({
+  /*
+   * The overview shows a SAMPLE, not the ledger. At 184 receipts the full table pushed
+   * everything below it off the page, so the landing page became a scroll rather than a
+   * summary. /receipts is the ledger; this is the window onto it.
+   */
+  const PREVIEW = 8;
+  const rows: readonly EvidenceRow[] = receipts.slice(0, PREVIEW).map((r) => ({
     leaf: r.leaf,
     startedAt: r.receipt.request.startedAt,
     host: r.receipt.advertised.host,
@@ -84,14 +90,28 @@ export default async function OverviewPage() {
           <h2 className="text-xs uppercase tracking-[0.14em] text-muted">
             Evidence ledger
           </h2>
-          <Link href="/receipts" className="text-xs text-muted hover:text-stark">
-            All receipts
+          <Link
+            href="/receipts"
+            className="inline-flex min-h-[44px] items-center text-xs text-muted hover:text-stark"
+          >
+            {receipts.length > 0
+              ? `All ${receipts.length} receipts →`
+              : "All receipts →"}
           </Link>
         </div>
         <EvidenceTable
           rows={rows}
           emptyReason="No receipt has been produced. This repository is at phase P1: the verdict function and the verifier exist and are property-tested, but no live call has been made and no discharge has executed. Every claim in the ledger sits at rung R0."
         />
+        {receipts.length > PREVIEW ? (
+          <p className="text-xs text-muted">
+            Showing the {PREVIEW} most recent of {receipts.length}.{" "}
+            <Link href="/receipts" className="text-volt hover:underline">
+              Open the full ledger
+            </Link>{" "}
+            to filter by verdict, endpoint or run id.
+          </p>
+        ) : null}
       </section>
     </div>
   );

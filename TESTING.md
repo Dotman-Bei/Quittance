@@ -52,9 +52,10 @@ not be verification.
 - **`/endpoints`** — every endpoint under 20 calls says `INSUFFICIENT SAMPLE`, never a percentage
 - Landing page — third-party calls and `PROJECT_BASELINE` (our own endpoint) are counted
   **separately** and never summed
-- Landing page, *Corpus notes* — it reports **"Receipts whose published verdict does not re-derive: 2"**.
-  Those two are ours, from a bug found by re-deriving the corpus from a clean clone. They are kept on
-  purpose; `evidence/receipts/README.md` names them and explains the cause
+- Runs against **our own** adversarial endpoint are kept out of the published ledger entirely, in
+  `evidence/baseline-runs/`. Two of those do not re-derive — a real bug in our own gate, found by
+  doing exactly what step 3.1 asks you to do. They are preserved rather than deleted, and
+  `evidence/baseline-runs/README.md` explains the cause
 
 ---
 
@@ -93,8 +94,16 @@ for f in evidence/receipts/*.json; do
 done
 ```
 
-Every receipt re-derives except the two we document. Each file is named by its own leaf hash — the
+Every one of the 184 published receipts re-derives. Each file is named by its own leaf hash — the
 sha256 of its canonicalized contents — so the filename is itself a checkable claim.
+
+Then check the runs we kept out of the ledger, two of which do **not** re-derive:
+
+```bash
+for f in evidence/baseline-runs/*.json; do
+  node packages/verifier/dist/cli.js verify "$f" || echo "MISMATCH: $f"
+done
+```
 
 ### 3.2 Confirm the verdict function is pure and total
 
