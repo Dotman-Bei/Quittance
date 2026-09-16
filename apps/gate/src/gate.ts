@@ -322,6 +322,14 @@ export async function call(args: {
     advertised: q.advertised,
     observed,
   });
+  /*
+   * The envelope the receipt COMMITS to. §5.2: "A verdict may only be computed from data
+   * committed to in the receipt. Anything the gate knows but did not commit to is not an
+   * input." A settlement failure is something the gate learns AFTER the delivery check, so
+   * it has to be written back into the committed envelope or the published verdict cannot
+   * be re-derived by anyone else.
+   */
+  let committed: ObservedResponse = observed;
 
   /* §5.2 only one state releases money. */
   let execution: ExecuteOutcome | null = null;
@@ -335,10 +343,12 @@ export async function call(args: {
       dischargeTxHash = execution.result.transactionHash ?? null;
       if (execution.result.status === "failed") {
         /* The check passed; the execution did not land. That is OUR failure, and it is named. */
-        state = "SETTLEMENT_FAILED";
+        committed = { ...observed, outcome: "settlement_failed" };
+        state = verdict({ intent: q.intent, advertised: q.advertised, observed: committed });
       }
     } else {
-      state = "SETTLEMENT_FAILED";
+      committed = { ...observed, outcome: "settlement_failed" };
+      state = verdict({ intent: q.intent, advertised: q.advertised, observed: committed });
     }
   }
 
@@ -347,11 +357,15 @@ export async function call(args: {
     intent: q.intent,
     advertised: q.advertised,
     request: { url: q.url, method: q.requestShape.method, requestSha256, startedAt },
-    observed,
+    observed: committed,
     run: { keeperhubRunId, dischargeTxHash, mode: "gate", label: args.label },
     publishedVerdict: state,
   };
 
+  /*
+   * The published verdict is now, by construction, the output of verdict() over the
+   * receipt's own committed envelope. A stranger re-running it reaches the same answer.
+   */
   return { receipt, leaf: await sha256Canonical(receipt), verdict: state, body, execution };
 }
 

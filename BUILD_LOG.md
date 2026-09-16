@@ -831,3 +831,57 @@ Budget: buyer holds 4.95 USDC; 120 calls cost roughly 0.1–0.5 USDC in purchase
 | Re-derive | **all of them** |
 | Gates | G1, G3, G8 passed · G2 partial · **G4 not met** · G5 running |
 | Claims | C-003 **R2** · C-001 R1 · five at R0 |
+
+---
+
+## 2026-09-16 · G7 clean-room run against the public repo · **found two unverifiable receipts**
+
+### The run
+
+Fresh clone of `github.com/Dotman-Bei/Quittance` (15 commits, 303 files), README only, no access to
+this machine.
+
+| Step | Result |
+|---|---|
+| `pnpm install` | exit 0 |
+| `pnpm build` | exit 0 |
+| `pnpm test` | exit 0, **51 passed** |
+| `pnpm skills:verify` | exit 0 |
+| `apps/gate`, `apps/baseline`, `scripts/campaign.ts` | **present** — the previous run's blockers are gone |
+| Corpus | **129 receipts** |
+| A third-party receipt's transaction, checked on Base | **SUCCESS**, block 51,349,682 |
+
+### What it caught
+
+**127 of 129 receipts re-derived. Two did not.**
+
+Both published `SETTLEMENT_FAILED` over an envelope recording `outcome: "observed"` and a clean 200,
+so re-derivation yields `DELIVERED_AS_ADVERTISED`. The gate changed the published verdict on learning
+the fee had failed, without writing that fact into the envelope the receipt commits to — violating
+§5.2, the rule the entire product rests on.
+
+**Nothing else would have found it.** 51 tests passed; they exercised `verdict()` over constructed
+envelopes, never the gate's path from execution result to published receipt. The adversarial suite
+asserted verdicts, not re-derivability. The receipts look ordinary.
+
+Only re-deriving the published corpus from outside found it — which is exactly what C-002 says a
+stranger can do, and the first time anyone actually did it, it caught us.
+
+### Fixed
+
+`apps/gate` writes `outcome: "settlement_failed"` into the committed envelope and re-runs `verdict()`
+over it, so a published verdict is by construction the function's output over the receipt's own
+inputs. Two regression tests pin it. **Tests 51 → 53.**
+
+The two bad receipts are **kept**, documented in `evidence/receipts/README.md`. Deleting them to make
+the corpus look clean is the behaviour this project exists to prevent.
+
+Recorded as **D-014**, including the general lesson: every place the gate assigns a `VerdictState` by
+hand is a place the receipt can disagree with the function. One such place remains — the pre-purchase
+refusal, which produces no receipt.
+
+### G7 status
+
+The credential-free half **passes**. The live-call half is documented in the README but was not
+exercised by a stranger, because it requires their own funded wallet and KeeperHub account. G7 is not
+claimed as passed.

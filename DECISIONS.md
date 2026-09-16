@@ -908,3 +908,67 @@ these only the reduced-motion guard is independently required (accessibility), a
 **Cost 3 — the design intent now lives in two places.** `frontend.txt` for the visual system,
 `DESIGN.md` for how it is constrained by the product's honesty rules. Neither alone is sufficient,
 and a future reader must know both. D-003 recorded the same split against the old spec.
+
+---
+
+## D-014 · A settlement failure must be committed to the receipt, not merely known · 2026-09-16 · active
+
+### What was decided
+
+When the fee execution fails, the gate writes `outcome: "settlement_failed"` into the **committed**
+observed envelope and re-runs `verdict()` over it. The published verdict is therefore, by
+construction, the output of the verdict function over the receipt's own inputs.
+
+### What evidence forced it
+
+The **G7 clean-room run** on 2026-09-16: a fresh clone of the public repository, re-deriving the
+whole published corpus with no access to anything of ours. **127 of 129 re-derived. Two did not.**
+
+Both published `SETTLEMENT_FAILED` over an envelope recording `outcome: "observed"` and a clean HTTP
+200. Re-derivation yields `DELIVERED_AS_ADVERTISED`.
+
+The gate had learned the fee execution failed *after* the delivery check and changed the published
+verdict without writing that into the envelope. §5.2 is unambiguous:
+
+> "A verdict may only be computed from data committed to in the receipt. Anything the gate knows but
+> did not commit to is not an input."
+
+The gate broke the rule the whole product rests on, and did it in a way nothing else caught:
+
+- **51 passing tests** did not catch it. They exercised `verdict()` over constructed envelopes, never
+  the gate's own path from execution result to published receipt.
+- **The adversarial suite** did not catch it — it asserted verdicts, not re-derivability.
+- **The receipts look ordinary.** Nothing on the surface distinguishes them.
+
+Only re-deriving the published corpus from outside found it. That is precisely what C-002 claims a
+stranger can do, and the first time it was actually done end-to-end it caught us.
+
+### What this says about the claims
+
+**C-002 was right to be held at R0.** Its wording is "any stranger can re-derive a published verdict",
+and until this run no one had. Two of the first published verdicts could not be re-derived. Had the
+claim been raised on the strength of unit tests, it would have been false in public.
+
+### What it costs
+
+**Cost 1 — two receipts in the published corpus do not re-derive, permanently.** They are kept, with
+`evidence/receipts/README.md` naming them, explaining the cause, and stating the fix. Deleting them to
+clean the corpus is the exact behaviour this project exists to prevent. They are `PROJECT_BASELINE`
+and moved no third-party money.
+
+**Cost 2 — `SETTLEMENT_FAILED` now changes what the receipt says about the response.** A reader sees
+`outcome: "settlement_failed"` on an envelope whose HTTP status is 200. That is accurate — delivery
+succeeded, settlement did not — but it reads oddly, and every surface displaying it must say which
+half failed. It is our failure, not the seller's, and it must never enter an endpoint's delivery
+record.
+
+**Cost 3 — the gate now calls `verdict()` twice on the settlement path.** Once on the observed
+envelope, once on the committed one. Cheap, since the function is pure, and the alternative is
+assigning a verdict by hand — which is what caused this.
+
+### The general lesson, recorded because it will recur
+
+Every place the gate assigns a `VerdictState` by assignment rather than by calling `verdict()` is a
+place the receipt can disagree with the function. There is now exactly one such place left — the
+pre-purchase refusal in `quote()`, which produces no receipt at all and therefore nothing to
+re-derive. Any future state must be introduced by writing an input and re-running the function.

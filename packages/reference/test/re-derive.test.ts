@@ -105,3 +105,35 @@ describe("re-derivation", () => {
     if (!p.ok) expect(p.problems.length).toBeGreaterThan(0);
   });
 });
+
+/*
+ * Regression, found by the G7 clean-room run on 2026-09-16.
+ *
+ * Two published receipts did not re-derive. Both recorded `outcome: "observed"` with a
+ * clean 200 response while publishing SETTLEMENT_FAILED — the gate knew the fee execution
+ * had failed but never wrote that into the envelope the receipt commits to. §5.2 is
+ * explicit that anything not committed to is not an input, so the published verdict was
+ * unreachable by anyone re-running the function.
+ *
+ * The verifier caught it in our own corpus, which is the mechanism working.
+ */
+describe("§5.2 a settlement failure must be committed, not merely known", () => {
+  it("does not re-derive when SETTLEMENT_FAILED is published over an untouched envelope", async () => {
+    const base = receipt();
+    const r = await reDerive({ ...base, publishedVerdict: "SETTLEMENT_FAILED" });
+    expect(r.ok).toBe(false);
+    expect(r.reDerivedVerdict).toBe("DELIVERED_AS_ADVERTISED");
+    expect(r.problems.join(" ")).toContain("verdict mismatch");
+  });
+
+  it("re-derives once the outcome is written into the committed envelope", async () => {
+    const base = receipt();
+    const r = await reDerive({
+      ...base,
+      observed: { ...base.observed, outcome: "settlement_failed" },
+      publishedVerdict: "SETTLEMENT_FAILED",
+    });
+    expect(r.reDerivedVerdict).toBe("SETTLEMENT_FAILED");
+    expect(r.ok).toBe(true);
+  });
+});
