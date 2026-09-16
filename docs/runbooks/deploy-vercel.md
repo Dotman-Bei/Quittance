@@ -29,10 +29,14 @@ acquire the gate's credentials.
 Vercel must build the workspace packages before the app, because `apps/web` imports
 `@quittance/protocol-types` and `@quittance/reference` from source.
 
+`apps/web/vercel.json` carries the framework, install and build commands, so the only field you must
+set by hand is the Root Directory.
+
 | Setting | Value |
 |---|---|
-| Framework preset | Next.js |
-| Root Directory | **`apps/web`** |
+| **Application Preset** | **Next.js** — *not* "Other". With "Other" there is no Next.js adapter: no serverless functions, no server rendering, and the receipt pages cannot read the corpus at all |
+| Root Directory | **`apps/web`** — not `apps`. `apps` contains four workspaces and no Next.js app |
+| **Output Directory** | **leave the override OFF.** The Next.js preset knows it is `.next`. The "Other" preset's default of `'public' if it exists, or '.'` publishes static files and no application |
 | Include files outside the root directory | **on** — the corpus and the workspace packages live above it |
 | Install Command | `cd ../.. && pnpm install --frozen-lockfile` |
 | Build Command | `cd ../.. && pnpm -r --filter './packages/**' build && pnpm --filter @quittance/web build` |
