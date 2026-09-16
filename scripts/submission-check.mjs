@@ -103,9 +103,32 @@ add("Form answers drafted", formOk, formDetail, "§24 — the failure answer is 
 let contactOk = false;
 let contactDetail = "no docs/submission.md";
 if (existsSync(FORM)) {
-  const text = readFileSync(FORM, "utf8");
+  /*
+   * Strip placeholders before matching. The first version passed on
+   * "<HANDLE — owner to supply, e.g. @yourname>" because the example inside the
+   * placeholder matched the handle pattern. A row that reports "present" for a value
+   * nobody has supplied is worse than one that reports nothing.
+   */
+  const text = readFileSync(FORM, "utf8")
+    .replace(/`?<[^>]*(?:to supply|TODO|placeholder)[^>]*>`?/gi, "")
+    .replace(/`?<[^>]*e\.g\.[^>]*>`?/gi, "");
   const hasEmail = /[\w.+-]+@[\w-]+\.[\w.]+/.test(text);
-  const hasHandle = /(x\.com|twitter\.com|discord|@[A-Za-z0-9_]{2,})/i.test(text);
+  /*
+   * Three false passes had to be closed here, all of them reporting a handle "present"
+   * that nobody supplied:
+   *   1. the placeholder's own example, "e.g. @yourname" — placeholders are stripped first
+   *   2. "@gmail" inside the email address — the bare-handle branch now rejects a match
+   *      preceded by a word character, a dot or an @
+   *   3. the WORD "Discord" in the sentence explaining what §24 requires — the Discord
+   *      branch now needs an actual username after a colon or @
+   * A row reporting "present" for a value nobody supplied is worse than one reporting
+   * nothing, because it retires the question.
+   */
+  const hasHandle =
+    /x\.com\/[A-Za-z0-9_]+/i.test(text) ||
+    /twitter\.com\/[A-Za-z0-9_]+/i.test(text) ||
+    /discord\s*[:@]\s*[A-Za-z0-9_.#]{2,}/i.test(text) ||
+    /(?<![\w.@])@[A-Za-z0-9_]{2,}/.test(text);
   contactOk = hasEmail && hasHandle;
   contactDetail = `email: ${hasEmail ? "present" : "MISSING"}, X/Discord handle: ${hasHandle ? "present" : "MISSING"}`;
 }

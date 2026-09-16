@@ -106,10 +106,10 @@ recorded in D-006. Neither was caught by 41 passing tests, which is worth knowin
 
 ## Contact
 
-`OWNER` — required before submission. §24 requires an email **and** an X or Discord handle.
+§24 requires an email **and** an X or Discord handle.
 
-- Email: `<owner to supply>`
-- X or Discord: `<owner to supply>`
+- **Email:** bamigboyeemmanuel401@gmail.com
+- **X:** `<HANDLE — owner to supply, e.g. @yourname>`
 
 ---
 
