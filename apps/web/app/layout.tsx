@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import { Navbar } from "@/components/layout/Navbar";
@@ -19,6 +19,12 @@ const inter = Inter({
   variable: "--font-inter",
   display: "swap",
 });
+
+/* The browser chrome should match the obsidian canvas, not sit on white. */
+export const viewport: Viewport = {
+  themeColor: "#1a1f0f",
+  colorScheme: "dark",
+};
 
 export const metadata: Metadata = {
   title: "Quittance",

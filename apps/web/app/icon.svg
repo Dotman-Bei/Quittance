@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Quittance">
+  <!-- Same mark as the navbar: rounded square in Volt Lime, black Q.
+       rounded-xl at 32px is 12px, which is 24 units at this scale. -->
+  <rect width="64" height="64" rx="24" fill="#C4FF0D"/>
+  <text x="32" y="33"
+        font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="42" font-weight="900" fill="#000"
+        text-anchor="middle" dominant-baseline="central">Q</text>
+</svg>
