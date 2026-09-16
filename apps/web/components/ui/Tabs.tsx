@@ -27,7 +27,7 @@ export function Tabs({
             type="button"
             aria-selected={selected}
             onClick={() => onSelect(item.id)}
-            className={`num rounded-pill border px-2.5 py-1 text-xs tracking-wide transition-colors ${
+            className={`num inline-flex min-h-[44px] items-center rounded-pill border px-3.5 py-2 text-xs tracking-wide transition-colors ${
               selected
                 ? "border-volt bg-surface-3 text-volt"
                 : "border-edge text-muted hover:border-edge-strong hover:text-frost"

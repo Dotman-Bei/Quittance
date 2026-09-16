@@ -36,7 +36,7 @@ export default async function OverviewPage() {
   return (
     <div className="grid gap-12">
       <section className="grid gap-6">
-        <h1 className="display max-w-5xl text-5xl sm:text-6xl lg:text-7xl">
+        <h1 className="display max-w-5xl text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
           The gap x402 leaves between verification and settlement, Quittance measures and
           records.
         </h1>

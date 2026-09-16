@@ -76,7 +76,7 @@ export function DiffTermsView({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-edge">
-      <table className="hash-cell w-full border-collapse text-left">
+      <table className="hash-cell w-full min-w-[46rem] border-collapse text-left">
         <caption className="sr-only">Advertised terms compared with the observed response</caption>
         <thead>
           <tr className="border-b border-edge-strong bg-sunken">

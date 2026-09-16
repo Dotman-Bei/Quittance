@@ -44,7 +44,7 @@ export function HowItWorks() {
       <Card>
         <CardTitle>Which leg KeeperHub executes</CardTitle>
         <div className="mt-3 overflow-x-auto">
-          <table className="hash-cell w-full border-collapse text-left">
+          <table className="hash-cell w-full min-w-[46rem] border-collapse text-left">
             <caption className="sr-only">The discharge leg and the purchase leg compared</caption>
             <thead>
               <tr className="border-b border-edge-strong">
@@ -134,7 +134,7 @@ export function HowItWorks() {
           </p>
           <Link
             href="/verify"
-            className="num mt-3 inline-block rounded-2xl border border-volt bg-surface-3 px-3 py-1.5 text-xs uppercase tracking-[0.12em] text-volt"
+            className="num mt-3 inline-flex min-h-[44px] items-center rounded-2xl border border-volt bg-surface-3 px-4 py-2 text-xs uppercase tracking-[0.12em] text-volt"
           >
             Re-derive a receipt
           </Link>

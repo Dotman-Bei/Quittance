@@ -28,7 +28,7 @@ export function Navbar() {
         className="glass mx-auto flex max-w-[1280px] flex-wrap items-center gap-x-6 gap-y-3 rounded-pill px-6 py-3"
       >
         {/* frontend.txt §4A logo mark, carrying this product's initial. */}
-        <Link href="/" className="flex select-none items-center gap-2.5">
+        <Link href="/" className="flex min-h-[44px] select-none items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-volt text-base font-black text-black shadow-volt-sm">
             Q
           </span>
@@ -44,7 +44,7 @@ export function Navbar() {
                 <Link
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
-                  className={`inline-block rounded-pill px-3.5 py-1.5 text-sm font-medium transition-all ${
+                  className={`inline-flex min-h-[44px] items-center rounded-pill px-4 py-2 text-sm font-medium transition-all ${
                     active
                       ? "bg-surface-3 text-volt shadow-volt-sm"
                       : "text-frost/70 hover:text-stark"
@@ -60,7 +60,7 @@ export function Navbar() {
         <div className="ml-auto">
           <Link
             href="/verify"
-            className="rounded-2xl bg-volt px-5 py-2 text-sm font-semibold text-black shadow-volt-sm transition-all hover:shadow-volt active:scale-95"
+            className="inline-flex min-h-[44px] items-center rounded-2xl bg-volt px-5 py-2 text-sm font-semibold text-black shadow-volt-sm transition-all hover:shadow-volt active:scale-95"
           >
             Re-derive a receipt
           </Link>

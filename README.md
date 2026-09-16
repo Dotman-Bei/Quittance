@@ -110,6 +110,14 @@ Across 38 live x402 sellers on Base mainnet, one per distinct host:
 
 The long version, written against this project on purpose, is [WHAT_IS_MEASURED.md](WHAT_IS_MEASURED.md).
 
+## Testing this as a judge
+
+**[TESTING.md](TESTING.md)** is the guided path, in increasing order of effort. Steps 1 and 2 need
+nothing at all — no account, no key, no install — and get you from the live site to a verdict
+re-derived in your own browser with the network disconnected.
+
+Live: **https://quittance-web-3g54.vercel.app**
+
 ## Verify it yourself
 
 No account, no API key, no funds. From a clean clone:

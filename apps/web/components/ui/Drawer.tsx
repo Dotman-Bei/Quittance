@@ -53,7 +53,7 @@ export function Drawer({
           <button
             type="button"
             onClick={onClose}
-            className="num rounded-pill border border-edge px-2 py-0.5 text-xs text-muted hover:border-edge-strong hover:text-stark"
+            className="num inline-flex min-h-[44px] items-center rounded-pill border border-edge px-4 py-2 text-xs text-muted hover:border-edge-strong hover:text-stark"
           >
             CLOSE
           </button>

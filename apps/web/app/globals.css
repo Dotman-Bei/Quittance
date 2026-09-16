@@ -94,6 +94,17 @@
   }
 }
 
+/*
+ * Grid and flex children default to `min-width: auto`, so a child wider than the track —
+ * a long unbreakable word at display size, or a wide table — expands the track past its
+ * container and the whole page scrolls sideways. The container's own max-width does not
+ * stop it. `min-width: 0` lets the track shrink and the child wrap or scroll on its own.
+ */
+.grid > *,
+.flex > * {
+  min-width: 0;
+}
+
 html {
   color-scheme: dark;
 }
@@ -153,6 +164,13 @@ body {
   line-height: 0.95;
   color: var(--color-stark);
   text-wrap: balance;
+  /*
+   * At display sizes a single long word ("verification", "settlement,") is wider than a
+   * phone viewport, and the block pushes the page sideways. Breaking is preferable to a
+   * horizontally scrolling page; hyphens make the break legible where supported.
+   */
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 /* Monospace for every number, tabular so columns align. */
