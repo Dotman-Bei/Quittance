@@ -972,3 +972,63 @@ Every place the gate assigns a `VerdictState` by assignment rather than by calli
 place the receipt can disagree with the function. There is now exactly one such place left — the
 pre-purchase refusal in `quote()`, which produces no receipt at all and therefore nothing to
 re-derive. Any future state must be introduced by writing an input and re-running the function.
+
+---
+
+## D-015 · A test teardown destroyed the published corpus · 2026-09-16 · active
+
+### What happened
+
+The Playwright teardown deleted **every file** in `evidence/receipts/` — 130 real receipts,
+including the evidence behind G3 and the transaction linked from the README. The next `git add -A`
+committed the deletion, so it reached the public repository and the live deployment.
+
+Found because the deployed site showed **"no runs yet"**. That was read as a file-tracing problem
+first; the corpus was simply gone.
+
+### The code, and the comment above it
+
+```ts
+/**
+ * Remove only what this run wrote. If the marker is absent the directory was not ours and
+ * nothing is deleted — a test run must never destroy real evidence.
+ */
+export async function unseed(): Promise<void> {
+  ...
+  if (!entries.includes(".e2e-owns-this-directory")) return;
+  for (const entry of entries) await rm(join(EVIDENCE_DIR, entry), { force: true });
+}
+```
+
+**The comment states the correct rule. The code does the opposite.** The marker guarded *whether* to
+delete, never *what* to delete — so the first run that wrote a marker into a directory holding real
+evidence deleted all of it. The guard read as a safety check and was an arming switch.
+
+### Fixed
+
+The marker is now a **manifest**: it records the exact leaves the run wrote, and teardown removes
+those and nothing else. Verified directly — a full 19-test run against a 132-receipt corpus leaves
+132 receipts.
+
+### What it costs, and what it says
+
+**Cost 1 — the corpus was recovered from git history, not from the working tree.** `git checkout
+c34ee57 -- evidence/receipts/` restored it. Had the deletion survived a few more commits unnoticed,
+or had the receipts never been committed, the evidence behind a passed gate would simply be gone.
+Nothing else in this repository would have noticed: `claim:verify` does not check that a claim's
+cited evidence file still exists.
+
+**Cost 2 — `git add -A` is now a known hazard here.** It faithfully staged a deletion nobody
+intended. Every future commit that touches `evidence/` should be checked with
+`git diff --cached --stat` before landing.
+
+**Cost 3 — this is the second time a comment was correct and the code was not.** D-014 was a gate
+that assigned a verdict instead of deriving it, against a §5.2 rule quoted two lines above. Both were
+found by external observation — a clean-room run and a live deployment — not by the 53 tests. A
+comment asserting a safety property is not the property.
+
+### The check that was missing
+
+`claim:verify` validates rungs, vocabulary and colour. It does **not** validate that the evidence a
+claim cites still exists on disk. A claim can sit at R2 pointing at a deleted file and the gate
+passes. That check is added.

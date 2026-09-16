@@ -32,6 +32,27 @@ for (const c of ledger.claims) {
   }
 }
 
+/* ---- 2b: a claim's cited evidence must still exist (D-015) ---------------- */
+/*
+ * On 2026-09-16 a test teardown deleted the published receipt corpus and a `git add -A`
+ * committed it. Every gate still passed: nothing checked that the files a claim cites are
+ * actually there. A claim at R2 pointing at a deleted receipt is an unevidenced claim.
+ */
+for (const c of ledger.claims) {
+  for (const e of c.evidence ?? []) {
+    if (typeof e.path !== "string" || e.path.length === 0) continue;
+    const full = join(ROOT, e.path);
+    if (!existsSync(full)) {
+      problems.push(`${c.id}: cites evidence that does not exist: ${e.path}`);
+      continue;
+    }
+    if (e.path.endsWith("/")) {
+      const entries = readdirSync(full);
+      if (entries.length === 0) problems.push(`${c.id}: cites an empty evidence directory: ${e.path}`);
+    }
+  }
+}
+
 /* ---- 3: forbidden vocabulary (§18) -------------------------------------- */
 const FORBIDDEN = ledger.forbiddenVocabulary;
 // Stems, so that a synonym wearing a different suffix is still caught.

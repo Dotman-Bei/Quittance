@@ -6,12 +6,13 @@
  * LOCAL FIXTURE label." Every receipt written here carries label LOCAL_FIXTURE, and
  * global-teardown removes them so nothing survives the run.
  */
-import { mkdir, writeFile, rm, readdir } from "node:fs/promises";
+import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { sha256Canonical, type Receipt } from "@quittance/protocol-types";
 
 export const EVIDENCE_DIR = join(process.cwd(), "..", "..", "evidence", "receipts");
-const MARKER = join(EVIDENCE_DIR, ".e2e-owns-this-directory");
+/* Records exactly which leaves this run wrote, so teardown can remove those and no others. */
+const MARKER = join(EVIDENCE_DIR, ".e2e-manifest.json");
 
 const HASH = (c: string) => c.repeat(64);
 
@@ -90,7 +91,6 @@ export type Seeded = { readonly dischargedLeaf: string; readonly notDeliveredLea
 
 export async function seed(): Promise<Seeded> {
   await mkdir(EVIDENCE_DIR, { recursive: true });
-  await writeFile(MARKER, "written by the e2e run; removed on teardown\n");
 
   const a = discharged();
   const b = notDelivered();
@@ -98,21 +98,32 @@ export async function seed(): Promise<Seeded> {
 
   await writeFile(join(EVIDENCE_DIR, `${leafA}.json`), JSON.stringify(a, null, 2));
   await writeFile(join(EVIDENCE_DIR, `${leafB}.json`), JSON.stringify(b, null, 2));
+  await writeFile(MARKER, JSON.stringify([leafA, leafB]));
 
   return { dischargedLeaf: leafA, notDeliveredLeaf: leafB };
 }
 
 /**
- * Remove only what this run wrote. If the marker is absent the directory was not ours and
- * nothing is deleted — a test run must never destroy real evidence.
+ * Remove ONLY the files this run wrote.
+ *
+ * The first version checked for a marker file and then deleted every entry in the
+ * directory. On 2026-09-16 that destroyed the entire published corpus — 130 real receipts,
+ * including the evidence behind G3 — and the next `git add -A` committed the deletion.
+ *
+ * The comment above it already said "a test run must never destroy real evidence". The
+ * comment was right and the code did not implement it. So the marker now RECORDS the exact
+ * leaves written, and teardown removes those and nothing else.
  */
 export async function unseed(): Promise<void> {
-  let entries: string[];
+  let manifest: string[];
   try {
-    entries = await readdir(EVIDENCE_DIR);
+    manifest = JSON.parse(await readFile(MARKER, "utf8")) as string[];
   } catch {
+    /* No manifest means this run wrote nothing here. Touch nothing. */
     return;
   }
-  if (!entries.includes(".e2e-owns-this-directory")) return;
-  for (const entry of entries) await rm(join(EVIDENCE_DIR, entry), { force: true });
+  for (const leaf of manifest) {
+    await rm(join(EVIDENCE_DIR, `${leaf}.json`), { force: true });
+  }
+  await rm(MARKER, { force: true });
 }

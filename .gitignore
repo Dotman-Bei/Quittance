@@ -36,3 +36,7 @@ pnpm-debug.log*
 apps/web/test-results/
 apps/web/playwright-report/
 apps/web/e2e/.seeded.json
+
+# e2e fixture manifest — names the receipts a test run wrote, so teardown removes only those.
+apps/web/evidence/
+evidence/receipts/.e2e-manifest.json
