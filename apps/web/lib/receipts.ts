@@ -6,6 +6,7 @@
  * state of this repository at phase P1, not a loading condition.
  */
 import { readdir, readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { Receipt, type VerdictState } from "@quittance/protocol-types";
 import { verdict } from "@quittance/reference";
@@ -18,7 +19,36 @@ export type StoredReceipt = {
   readonly agrees: boolean;
 };
 
-const EVIDENCE_DIR = join(process.cwd(), "..", "..", "evidence", "receipts");
+/*
+ * Where the published receipt corpus lives.
+ *
+ * `process.cwd()` is not the monorepo root everywhere this runs. Locally it is apps/web; on
+ * a serverless host it is the deployed function's own root. A single hardcoded `../../`
+ * resolves correctly in development and silently resolves to nothing in production — and
+ * because a missing directory is a legitimate state here (no runs yet), the failure would
+ * be INVISIBLE: a green deploy showing "no runs yet" with a full corpus on disk.
+ *
+ * So the directory is resolved by trying the candidates in order, and an explicit override
+ * always wins.
+ */
+function resolveEvidenceDir(): string {
+  const override = process.env["QUITTANCE_EVIDENCE_DIR"];
+  if (override !== undefined && override.length > 0) return override;
+
+  const cwd = process.cwd();
+  const candidates = [
+    join(cwd, "..", "..", "evidence", "receipts"), // repo checkout, run from apps/web
+    join(cwd, "evidence", "receipts"), // run from the repo root, or a traced bundle
+    join(cwd, "apps", "web", "evidence", "receipts"),
+  ];
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  /* Nothing found. The first candidate is returned so the ENOENT path reports honestly. */
+  return candidates[0] ?? join(cwd, "evidence", "receipts");
+}
+
+const EVIDENCE_DIR = resolveEvidenceDir();
 
 /**
  * Reads every receipt in evidence/receipts. A malformed file is skipped and counted,
