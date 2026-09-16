@@ -109,7 +109,7 @@ recorded in D-006. Neither was caught by 41 passing tests, which is worth knowin
 §24 requires an email **and** an X or Discord handle.
 
 - **Email:** bamigboyeemmanuel401@gmail.com
-- **X:** `<HANDLE — owner to supply, e.g. @yourname>`
+- **X:** [@heisbei02](https://x.com/heisbei02)
 
 ---
 

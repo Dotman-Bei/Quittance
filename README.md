@@ -276,6 +276,10 @@ requires atomic (integral) token units. Draft:
 [`docs/upstream/`](docs/upstream/2026-09-09-x402-non-integral-amount.md). It has not been filed —
 filing it is an outward-facing action and is the owner's to take.
 
+## Contact
+
+bamigboyeemmanuel401@gmail.com · [@heisbei02](https://x.com/heisbei02)
+
 ## Licence
 
 MIT.
