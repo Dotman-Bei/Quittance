@@ -104,7 +104,7 @@
     {
       "id": "C-004",
       "claim": "Non-delivery against a live endpoint was recorded and the discharge did not execute",
-      "currentRung": "R0",
+      "currentRung": "R2",
       "targetRung": "R2",
       "status": "asserted",
       "phase": "P2",
@@ -114,8 +114,23 @@
       "killCriteria": [
         "K1"
       ],
-      "evidence": [],
-      "notes": "The absence of a discharge transaction is the point of this claim, not an omission in its evidence."
+      "evidence": [
+        {
+          "kind": "onchain",
+          "command": "node internal/buyer/hunt.mjs",
+          "path": "evidence/receipts/d57988cd35d2d2bbc714d5c3dafdcf442410d74dec4ed7c4b371c8e4277dc997.json",
+          "reaches": "R2",
+          "detail": "api.onesource.io returned HTTP 502 AFTER payment on two resources \u2014 /api/chain/erc1155-balance (GET) and /api/chain/estimate-gas (POST). Both were called exactly as the seller's own bazaar declaration specifies: all four declared query parameters for the first, the declared JSON body for the second. Both resources return 402 when probed unpaid, so payment was required and accepted before the failure. Verdict NOT_DELIVERED, dischargeTxHash null on both \u2014 NO FEE WAS CHARGED \u2014 and both receipts re-derive independently. The absence of a fee transaction is the evidence."
+        },
+        {
+          "kind": "onchain",
+          "command": "node internal/buyer/hunt.mjs",
+          "path": "evidence/receipts/823df56c8cb188f461fda63b2f206da51ae7383e027ddb534dec5cf5dd6e83c2.json",
+          "reaches": "R2",
+          "detail": "Second instance, /api/chain/estimate-gas, POST with the seller's declared body. HTTP 502, NOT_DELIVERED, no fee."
+        }
+      ],
+      "notes": "R2 reached 2026-09-16 after a 60-seller sweep. These are the first non-discharges NOT caused by us: earlier ones came from the gate sending a bare GET to endpoints needing query parameters or POST, and from a seller whose bazaar declaration contradicts itself. Both of these were called exactly as declared and the seller returned 502 after taking payment. Of 60 live sellers paid, 13 did not deliver; 11 of those 13 remain attributable to us \u2014 8 unsubstituted path placeholders and 3 requiring an API key the seller declares. Only these 2 are clean seller failures, and the endpoint page must keep showing which checks were available so this is not read as a 78% seller failure rate."
     },
     {
       "id": "C-005",

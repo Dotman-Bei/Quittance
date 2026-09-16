@@ -55,7 +55,7 @@ run, and nothing else.
 | # | Evidence | Status | Where |
 |---|---|---|---|
 | 1 | First fee executed through KeeperHub, explorer link + run id | **done, 2026-09-15** | [`0x015f4520…`](https://basescan.org/tx/0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852) · block 51,349,475 |
-| 2 | First recorded non-discharge **against a live third-party endpoint** | **NOT DONE** — see below | — |
+| 2 | First recorded non-discharge **against a live third-party endpoint** | **done, 2026-09-16** | `api.onesource.io` returned 502 after payment. `NOT_DELIVERED`, **no fee charged** |
 | 2a | Duplicate settlement produces exactly one discharge | **done, 2026-09-15** | [`0xa65b14a8…`](https://basescan.org/tx/0xa65b14a881352663f343506be15cdad4f9fbf467cac0ebf928479bcff2386ccd) · `idempotentReplay: true` |
 | 2b | All five failure shapes drive the correct verdict | **done** — 5 of 5 | `PROJECT_BASELINE`, not third-party |
 | 3 | Sustained campaign totals, failures included | **not run** | — |
@@ -69,10 +69,18 @@ Claims and their evidence rungs live in
 [`docs/claims.md`](docs/claims.md). **Three claims are at R2** (executed live, receipt recorded);
 four remain at R0. None is above its evidence.
 
-**No non-discharge against a live third-party endpoint has been recorded.** Every non-discharge so
-far was either produced by our own labelled endpoint, or was self-inflicted — the gate sent a bare
-GET to an endpoint that needed query parameters, and to another that was POST-only. Called correctly,
-both deliver. That is not a seller failing, so **C-004 stays at R0** and G4 is not passed.
+**A non-discharge against a live third-party endpoint has been recorded.** `api.onesource.io`
+returned HTTP 502 after payment on two resources, both called exactly as its own bazaar declaration
+specifies — all four declared query parameters for one, the declared JSON body for the other. Both
+return 402 when probed unpaid, so payment was required and accepted before the failure. Verdict
+`NOT_DELIVERED`, **no fee transaction exists**, and both receipts re-derive independently. The
+absence of a fee is the evidence.
+
+**Read the failure counts carefully.** Of 60 live sellers paid, 13 did not deliver — but **11 of
+those 13 are our fault**, not the sellers': 8 were URLs with unsubstituted path placeholders, and 3
+required an API key the seller openly declares. Only 2 are clean seller failures. A 13-of-60 headline
+would libel 11 endpoints, which is why the endpoint pages show which checks were available rather
+than a bare rate.
 
 ### What the probe run found
 

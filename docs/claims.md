@@ -18,14 +18,14 @@ in the same commit or neither lands.
 
 ## Current state
 
-**7 claims — R0=4 · R2=3**
+**7 claims — R0=3 · R2=4**
 
 | id | Claim | Now | Target | Phase | Gates |
 |---|---|---|---|---|---|
 | C-001 | A discharge fires only on DELIVERED_AS_ADVERTISED | **R2** | R4 | P1 | G2 |
 | C-002 | Any stranger can re-derive a published verdict from the receipt and the chain | **R0** | R4 | P1 | G2, G7 |
 | C-003 | Value moved through KeeperHub, triggered by a call to a live listed endpoint | **R2** | R3 | P2 | G3 |
-| C-004 | Non-delivery against a live endpoint was recorded and the discharge did not execute | **R0** | R2 | P2 | G4 |
+| C-004 | Non-delivery against a live endpoint was recorded and the discharge did not execute | **R2** | R2 | P2 | G4 |
 | C-005 | A duplicate settlement attempt does not produce a second discharge | **R2** | R3 | P3 | G10 |
 | C-006 | The system survived an induced infrastructure failure and recovered | **R0** | R2 | P3 | G6 |
 | C-007 | Endpoint delivery records are computed from receipts, not from seller-reported metadata | **R0** | R3 | P3 | G5 |
@@ -76,12 +76,19 @@ in the same commit or neither lands.
 
 ### C-004 — Non-delivery against a live endpoint was recorded and the discharge did not execute
 
-**Rung:** R0 (target R2) · **Phase:** P2
+**Rung:** R2 (target R2) · **Phase:** P2
 **Kill criteria in scope:** K1
 
-**Evidence:** none. This claim is asserted in a document and nothing more.
+**Evidence:**
 
-**Notes.** The absence of a discharge transaction is the point of this claim, not an omission in its evidence.
+- `node internal/buyer/hunt.mjs` — reaches R2
+  - `evidence/receipts/d57988cd35d2d2bbc714d5c3dafdcf442410d74dec4ed7c4b371c8e4277dc997.json`
+  - api.onesource.io returned HTTP 502 AFTER payment on two resources — /api/chain/erc1155-balance (GET) and /api/chain/estimate-gas (POST). Both were called exactly as the seller's own bazaar declaration specifies: all four declared query parameters for the first, the declared JSON body for the second. Both resources return 402 when probed unpaid, so payment was required and accepted before the failure. Verdict NOT_DELIVERED, dischargeTxHash null on both — NO FEE WAS CHARGED — and both receipts re-derive independently. The absence of a fee transaction is the evidence.
+- `node internal/buyer/hunt.mjs` — reaches R2
+  - `evidence/receipts/823df56c8cb188f461fda63b2f206da51ae7383e027ddb534dec5cf5dd6e83c2.json`
+  - Second instance, /api/chain/estimate-gas, POST with the seller's declared body. HTTP 502, NOT_DELIVERED, no fee.
+
+**Notes.** R2 reached 2026-09-16 after a 60-seller sweep. These are the first non-discharges NOT caused by us: earlier ones came from the gate sending a bare GET to endpoints needing query parameters or POST, and from a seller whose bazaar declaration contradicts itself. Both of these were called exactly as declared and the seller returned 502 after taking payment. Of 60 live sellers paid, 13 did not deliver; 11 of those 13 remain attributable to us — 8 unsubstituted path placeholders and 3 requiring an API key the seller declares. Only these 2 are clean seller failures, and the endpoint page must keep showing which checks were available so this is not read as a 78% seller failure rate.
 
 ### C-005 — A duplicate settlement attempt does not produce a second discharge
 

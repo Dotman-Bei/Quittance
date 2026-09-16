@@ -885,3 +885,50 @@ refusal, which produces no receipt.
 The credential-free half **passes**. The live-call half is documented in the README but was not
 exercised by a stranger, because it requires their own funded wallet and KeeperHub account. G7 is not
 claimed as passed.
+
+---
+
+## 2026-09-16 · **G4 PASSED** — a genuine third-party non-delivery
+
+### What was found
+
+A free classification sweep over the live discovery index: **60 of 64** Base-mainnet resources return
+a parseable 402. Declared shapes: 48 `GET+query`, 9 plain `GET`, 2 `POST+body`, 1 `GET+body` (the
+self-contradictory one from D-013's finding).
+
+All 60 were then paid, each called **exactly as it declares**. 13 did not deliver.
+
+### Only 2 of the 13 are the seller's fault, and the distinction is the work
+
+| Cause | Count | Whose fault |
+|---|---|---|
+| Unsubstituted path placeholders (`:address`, `:hash`, `:number`) | 8 | **ours** — the index lists route patterns |
+| `401` — endpoint requires an API key it openly declares | 3 | **ours** |
+| **`502` after payment, called exactly as declared** | **2** | **the seller's** |
+
+The two:
+
+- `api.onesource.io/api/chain/erc1155-balance` — GET with all four declared query parameters
+- `api.onesource.io/api/chain/estimate-gas` — POST with the declared JSON body
+
+Both return 402 when probed unpaid, so payment was required and accepted before the failure. Verdict
+`NOT_DELIVERED`, **`dischargeTxHash: null` on both — no fee was charged** — and both receipts
+re-derive independently. **The absence of a fee transaction is the evidence.**
+
+This is the §3 orphan-payment case, observed in production: the buyer paid, the endpoint returned
+nothing usable, and the measurement recorded it.
+
+**C-004 raised R0 → R2. Four claims now at R2.**
+
+### The count that would have been a lie
+
+Reporting "13 of 60 sellers failed" would libel 11 endpoints for our own malformed requests. Every
+earlier non-discharge in this project was self-inflicted too, and each time the fix was to make the
+gate honour what the seller declared rather than to record the failure against them.
+
+The README now states both numbers and which is which. Endpoint pages keep showing **which checks
+were available** so a reader cannot mistake our error rate for theirs.
+
+### Corpus
+
+**192 receipts, 174 third-party, 158 fee transactions.** 153 delivered, 21 did not.
