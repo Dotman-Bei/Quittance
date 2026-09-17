@@ -5,7 +5,7 @@
 
 ## Current phase: **P1**
 
-**Status:** open — G1 and G2's substance pass; G2's corpus is 193 against a stated 500. K8 TRIGGERED 2026-09-15: scope cut, see D-008.
+**Status:** open — G1 and G2's substance pass; G2's corpus is 343 against a stated 500. K8 TRIGGERED 2026-09-15: scope cut, see D-008.
 **Set:** 2026-09-09
 **Last gate closed:** **G1, 2026-09-09**
 
@@ -29,7 +29,7 @@ P1 closes when both of these exit zero on a fresh clone:
 | Gate | Command | Passes when |
 |---|---|---|
 | **G1** — No compiled-in protocol facts | `pnpm probe:all` | **PASSED 2026-09-09.** Exits 0. Address-literal check clean over 55 files; 39 of 46 live hosts returned a parseable 402; KeeperHub's 24-chain list read from its live API. Evidence: `evidence/probes/2026-09-09-g1-probe-run.md` |
-| **G2** — Verdict determinism | `pnpm test:properties` | **Exits zero, 61 tests.** Property half: 2000 generated envelopes per property; `verdict()` pure, total, deterministic, non-mutating, order-independent. **Corpus half: all 193 published receipts re-derive byte-identically** — each parses, its published verdict equals the function's output over its own committed inputs, it canonicalizes identically on a round trip, its filename is the sha256 of its contents, no non-eligible verdict carries a transaction, and no `PROJECT_BASELINE` row sits in the third-party ledger. **The corpus is 193, not G2's stated 500** — the count is reported, never asserted, because failing a build for having too few real receipts is an incentive to manufacture them |
+| **G2** — Verdict determinism | `pnpm test:properties` | **Exits zero, 61 tests.** Property half: 2000 generated envelopes per property; `verdict()` pure, total, deterministic, non-mutating, order-independent. **Corpus half: all 343 published receipts re-derive byte-identically** — each parses, its published verdict equals the function's output over its own committed inputs, it canonicalizes identically on a round trip, its filename is the sha256 of its contents, no non-eligible verdict carries a transaction, and no `PROJECT_BASELINE` row sits in the third-party ledger. **The corpus is 343, not G2's stated 500** — the count is reported, never asserted, because failing a build for having too few real receipts is an incentive to manufacture them |
 
 ### What is explicitly out of bounds while P1 is open
 
