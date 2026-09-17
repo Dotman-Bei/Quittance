@@ -986,3 +986,61 @@ contain. `docs/phase.md` records 193 against a stated 500 rather than claiming G
 
 The campaign now running will add ~130 more, reaching roughly 320. Still short of 500, and that will
 be stated too.
+
+---
+
+## 2026-09-17 · **G5 PASSED** — sustained campaign closed, three claims to R3
+
+### The campaign
+
+```
+130 gated calls / 114 discharges / 16 non-discharges
+  NOT_DELIVERED 16 · REQUIREMENTS_MISMATCH 2
+  transient infrastructure errors 0 (ours, never folded into any endpoint's record)
+  refused before purchase 2 (no money moved)
+  distinct hosts 31 · fee transactions 114
+  started 2026-09-16T14:15:52Z · closed 2026-09-17T14:41:39Z
+```
+
+**24 hours 26 minutes.** G5 requires 100+ gated calls across at least 24 hours with totals published
+including every failure. All three conditions met, and the report is checked in at
+`evidence/campaigns/`.
+
+Two details that matter more than the headline:
+
+- **Zero transient infrastructure errors.** Not one call failed for our reason across 24 hours. The
+  separate counter existed precisely so an RPC hiccup could never be folded into a seller's delivery
+  record, and it stayed at zero.
+- **Two refusals before purchase.** `REQUIREMENTS_MISMATCH` fired twice — the quote phase declining
+  before any money moved. Those are not gated calls and do not enter the delivery denominator.
+
+### Claims promoted
+
+| Claim | | |
+|---|---|---|
+| C-003 — value moved through KeeperHub | R2 → **R3** | sustained window, failures published |
+| C-005 — duplicate settlement produces one discharge | R2 → **R3** | 114 fees over 24h, no duplicate, K7 never fired |
+| C-007 — delivery records computed from receipts | R0 → **R3** | 32 hosts from 343 receipts over 46.6 hours |
+
+**Four of seven claims are now at their target rung.** C-001 and C-002 target R4, which needs
+re-derivation from a fresh clone with no database access; C-006 targets R2 and needs G6, which is
+unbuilt.
+
+### Corpus
+
+**343 receipts · 32 distinct hosts · 303 fee transactions · 46.6-hour span.** 303 delivered, 40 not.
+All 343 re-derive, enforced by `pnpm test:properties`.
+
+### The number still stated carefully
+
+40 non-discharges against 303 discharges reads as an 88% seller delivery rate. It is not one. In the
+60-seller sweep that produced most of them, **11 of 13 failures were our own malformed requests** —
+unsubstituted path placeholders and missing API keys the sellers openly declare. The landing page,
+the README and C-007's notes all say so, and endpoint pages show which checks were available so our
+error rate cannot be read as theirs.
+
+### Gates
+
+**8 of 10 pass:** G1, G2, G3, G4, G5, G8, G10, and G7's credential-free half. G6 is unbuilt and is
+not in K8's protection order. G9 stands at 5 of 7 — the demo video and filing the upstream report are
+the only rows left, and both are the owner's.

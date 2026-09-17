@@ -9,10 +9,10 @@
 </div>
 
 <p align="center">
-  <img alt="gates" src="https://img.shields.io/badge/acceptance_gates-7_of_10_passing-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="gates" src="https://img.shields.io/badge/acceptance_gates-8_of_10_passing-c4ff0d?style=flat-square&labelColor=1a1f0f">
   <img alt="network" src="https://img.shields.io/badge/Base_mainnet-live-c4ff0d?style=flat-square&labelColor=1a1f0f">
-  <img alt="receipts" src="https://img.shields.io/badge/receipts-201_re--derivable-c4ff0d?style=flat-square&labelColor=1a1f0f">
-  <img alt="transactions" src="https://img.shields.io/badge/KeeperHub_fee_txs-179-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="receipts" src="https://img.shields.io/badge/receipts-343_re--derivable-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="transactions" src="https://img.shields.io/badge/KeeperHub_fee_txs-303-c4ff0d?style=flat-square&labelColor=1a1f0f">
   <img alt="tests" src="https://img.shields.io/badge/tests-61_passing-c4ff0d?style=flat-square&labelColor=1a1f0f">
   <img alt="licence" src="https://img.shields.io/badge/licence-MIT-white?style=flat-square&labelColor=1a1f0f">
 </p>
@@ -38,9 +38,9 @@ something asserted into something measured.
 
 > **Stage: working build, partial evidence. Read this before anything below.**
 >
-> Seven of ten acceptance gates pass. Value has moved on Base mainnet and the receipts are real.
-> **But:** three of seven claims are still at rung R0 — asserted, not executed. G5's sustained
-> campaign is mid-window. G6 is unbuilt. G7's live half has never been run by a stranger.
+> Eight of ten acceptance gates pass. Value has moved on Base mainnet and the receipts are real.
+> **But:** two of seven claims are still at rung R0 — asserted, not executed. G6 is unbuilt. G7's
+> live half has never been run by a stranger.
 > Facilitator mode and the receipt anchor were **cut** under our own kill criterion, and that is
 > recorded with what it cost.
 >
@@ -61,7 +61,7 @@ Nothing below needs an account, a key, or funds.
 
 | What you want to check | Where | What you should see |
 |---|---|---|
-| The ledger is real | [`/receipts`](https://quittance-web-3g54.vercel.app/receipts) | 201 gated calls against live third-party x402 endpoints |
+| The ledger is real | [`/receipts`](https://quittance-web-3g54.vercel.app/receipts) | 343 gated calls against live third-party x402 endpoints |
 | A call that was **not** paid for | filter to `NOT_DELIVERED` | HTTP 502 and **no transaction** — the absence is the evidence |
 | Re-derive a verdict yourself | [`/verify`](https://quittance-web-3g54.vercel.app/verify) | Paste a receipt → it re-derives **in your browser** |
 | That verification needs nothing from us | `/verify`, network disconnected | It still works |
@@ -156,11 +156,12 @@ Real transactions on Base mainnet. Every hash resolves.
 | Value moved through KeeperHub, triggered by a live listed endpoint | [`0x015f4520…`](https://basescan.org/tx/0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852) · block 51,349,475 | **R2** |
 | A duplicate submission produces **exactly one** discharge | [`0xa65b14a8…`](https://basescan.org/tx/0xa65b14a881352663f343506be15cdad4f9fbf467cac0ebf928479bcff2386ccd) · `idempotentReplay: true` | **R2** |
 | Non-delivery recorded against a live third party, **no fee charged** | `api.onesource.io` → HTTP 502, `dischargeTxHash: null` | **R2** |
-| A discharge fires only on `DELIVERED_AS_ADVERTISED` | 179 fee transactions, 22 non-discharges, zero exceptions | **R2** |
-| Every published verdict re-derives byte-identically | 201 receipts, enforced in CI by `pnpm test:properties` | — |
+| A discharge fires only on `DELIVERED_AS_ADVERTISED` | 303 fee transactions, 40 non-discharges, zero exceptions | **R2** |
+| Every published verdict re-derives byte-identically | 343 receipts, enforced in CI by `pnpm test:properties` | — |
+| Sustained campaign, failures included in the published count | [130 calls / 114 discharges / 16 non-discharges over 24h 26m](evidence/campaigns/) · 31 hosts | **R3** |
 | No compiled-in protocol fact | `pnpm probe:all` reads terms live and fails closed | **G1** |
 
-**201 receipts · 32 distinct hosts · 179 fee transactions · 61 tests.**
+**343 receipts · 32 distinct hosts · 303 fee transactions · 61 tests · 46.6-hour window.**
 Claims and their rungs: [`docs/claims.md`](docs/claims.md), generated from
 [`claims.json`](packages/claim-ledger/data/claims.json) and never hand-edited.
 
@@ -172,7 +173,7 @@ From a clean clone. No key, no account, no funds.
 git clone https://github.com/Dotman-Bei/Quittance.git && cd Quittance
 pnpm install && pnpm build
 
-# every published receipt, re-derived with no access to anything of ours
+# all 343 published receipts, re-derived with no access to anything of ours
 for f in evidence/receipts/*.json; do
   node packages/verifier/dist/cli.js verify "$f" || echo "MISMATCH: $f"
 done
@@ -201,7 +202,7 @@ The guided path, including a live gated call with your own wallet, is **[TESTING
 | Probes reading live x402 and KeeperHub surfaces | **real**, fails closed on drift |
 | Web surfaces, client-side re-derivation | **real**, 30 e2e tests across 5 viewports |
 | Adversarial endpoint (`apps/baseline`) | **real**, and labelled `PROJECT_BASELINE` everywhere |
-| Sustained 24h campaign (G5) | **mid-window** |
+| Sustained 24h campaign (G5) | **passed** — 130 calls over 24h 26m, totals published with every failure |
 | Recovery under induced failure (G6) | **not built** |
 | Facilitator mode, `ReceiptAnchor` | **cut** under kill criterion K8 — see [D-008](DECISIONS.md) |
 | Third-party adoption | **none.** Nothing here is evidence of demand |

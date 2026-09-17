@@ -18,17 +18,17 @@ in the same commit or neither lands.
 
 ## Current state
 
-**7 claims — R0=3 · R2=4**
+**7 claims — R0=2 · R2=2 · R3=3**
 
 | id | Claim | Now | Target | Phase | Gates |
 |---|---|---|---|---|---|
 | C-001 | A discharge fires only on DELIVERED_AS_ADVERTISED | **R2** | R4 | P1 | G2 |
 | C-002 | Any stranger can re-derive a published verdict from the receipt and the chain | **R0** | R4 | P1 | G2, G7 |
-| C-003 | Value moved through KeeperHub, triggered by a call to a live listed endpoint | **R2** | R3 | P2 | G3 |
+| C-003 | Value moved through KeeperHub, triggered by a call to a live listed endpoint | **R3** | R3 | P2 | G3 |
 | C-004 | Non-delivery against a live endpoint was recorded and the discharge did not execute | **R2** | R2 | P2 | G4 |
-| C-005 | A duplicate settlement attempt does not produce a second discharge | **R2** | R3 | P3 | G10 |
+| C-005 | A duplicate settlement attempt does not produce a second discharge | **R3** | R3 | P3 | G10 |
 | C-006 | The system survived an induced infrastructure failure and recovered | **R0** | R2 | P3 | G6 |
-| C-007 | Endpoint delivery records are computed from receipts, not from seller-reported metadata | **R0** | R3 | P3 | G5 |
+| C-007 | Endpoint delivery records are computed from receipts, not from seller-reported metadata | **R3** | R3 | P3 | G5 |
 
 ## Detail
 
@@ -63,7 +63,7 @@ in the same commit or neither lands.
 
 ### C-003 — Value moved through KeeperHub, triggered by a call to a live listed endpoint
 
-**Rung:** R2 (target R3) · **Phase:** P2
+**Rung:** R3 (target R3) · **Phase:** P2
 **Kill criteria in scope:** K1, K2, K5
 
 **Evidence:**
@@ -71,8 +71,11 @@ in the same commit or neither lands.
 - `node internal/buyer/run.mjs <live x402 resource>` — reaches R2
   - `evidence/receipts/f8f949d34582fadc525d28ea8e49cc0f1c45d4ea58acd4d8bfb2d9740a5d14e3.json`
   - First fee executed through KeeperHub on Base mainnet, triggered by a gated call to api.onesource.io, a live third-party x402 resource listed in the public discovery index. Transaction 0x015f4520b2e897fa392ac63ab863d4d1d52452682dc9fafbfe4be5c96f160852, block 51349475, status SUCCESS, verified against Base mainnet independently of KeeperHub. Both logs emitted by the real Base USDC contract: AuthorizationUsed (EIP-3009 nonce consumed, authorizer = buyer) and Transfer of 100 atomic USDC from buyer to gate. 24 such transactions now exist across 23 distinct third-party hosts.
+- `pnpm campaign -- --min 130 --window 24h` — reaches R3
+  - `evidence/campaigns/2026-09-16T14-15-52-602Z.md`
+  - Sustained campaign over 24h 26m: 130 gated calls, 114 discharges, 16 non-discharges, across 31 distinct live third-party hosts, with 114 fee transactions executed through KeeperHub on Base mainnet. Totals published INCLUDING every failure, and transient infrastructure errors counted separately (0 occurred). The full receipt corpus now spans 343 receipts over a 46.6-hour window.
 
-**Notes.** R2 reached. R3 requires a sustained window with failures included in the published count (G5). Per D-009 the value that moves is the conditional FEE, buyer to gate; the purchase leg is paid by the buyer directly and is not a KeeperHub execution. KeeperHub broadcast via a SPONSORED relayer, so msg.sender is KeeperHub's relayer rather than our organisation wallet — the submission must describe it that way.
+**Notes.** R3 reached 2026-09-17. Per D-009 the value that moves is the conditional FEE, buyer to gate; the purchase leg is paid by the buyer directly and is not a KeeperHub execution. KeeperHub broadcast via a sponsored relayer, so msg.sender is KeeperHub's relayer rather than our organisation wallet — the submission describes it that way.
 
 ### C-004 — Non-delivery against a live endpoint was recorded and the discharge did not execute
 
@@ -92,7 +95,7 @@ in the same commit or neither lands.
 
 ### C-005 — A duplicate settlement attempt does not produce a second discharge
 
-**Rung:** R2 (target R3) · **Phase:** P3
+**Rung:** R3 (target R3) · **Phase:** P3
 **Kill criteria in scope:** K5, K7
 
 **Evidence:**
@@ -100,8 +103,11 @@ in the same commit or neither lands.
 - `node internal/buyer/idempotency.mjs` — reaches R2
   - `evidence/receipts/`
   - The same authorization nonce submitted twice produced exactly one discharge. Both attempts returned executionId 5af7vnjtmxkywxtbpn3fj and transaction 0xa65b14a881352663f343506be15cdad4f9fbf467cac0ebf928479bcff2386ccd (block 51350479, SUCCESS on Base mainnet), and the second was marked idempotentReplay: true. Enforced by KeeperHub's documented Idempotency-Key contract keyed on the authorization nonce, used as shipped rather than reimplemented (§8.4).
+- `pnpm campaign -- --min 130 --window 24h` — reaches R3
+  - `evidence/campaigns/2026-09-16T14-15-52-602Z.md`
+  - Idempotency held across a sustained window: 130 gated calls over 24h 26m produced 114 fee transactions and not one duplicate discharge. Every fee is keyed by its authorization nonce through KeeperHub's documented Idempotency-Key contract, used as shipped rather than reimplemented (§8.4). K7 did not fire at any point.
 
-**Notes.** R2 reached against a live KeeperHub execution on Base mainnet. R3 requires the same property to hold across a sustained window. The run was against our own endpoint and is labelled PROJECT_BASELINE — the claim is about OUR settlement behaviour, not about a third party, so the label does not weaken it. If a duplicate ever produces two discharges, K7 fires: stop the campaign, publish the tx pair, restart the count.
+**Notes.** R3 reached across a 24-hour window. The R2 evidence remains the sharper demonstration: the same nonce submitted twice returned the same executionId and the same transaction, with the second marked idempotentReplay. If a duplicate ever produces two discharges, K7 fires: stop the campaign, publish the tx pair, restart the count from zero.
 
 ### C-006 — The system survived an induced infrastructure failure and recovered
 
@@ -113,16 +119,16 @@ in the same commit or neither lands.
 
 ### C-007 — Endpoint delivery records are computed from receipts, not from seller-reported metadata
 
-**Rung:** R0 (target R3) · **Phase:** P3
+**Rung:** R3 (target R3) · **Phase:** P3
 **Kill criteria in scope:** K1, K4, K5
 
 **Evidence:**
 
-- `pnpm probe:all` — reaches supports the mechanism, raises no rung
-  - `evidence/probes/2026-09-09-g1-probe-run.md`
-  - Advertised terms read live from 39 of 46 distinct hosts on Base mainnet, entirely from each seller's own 402 response and never from the discovery index. The index disagreed with the live terms (it reported a mimeType for 5 of 100 resources; the live 402s carry one for 38 of 38), which is direct evidence that seller-reported index metadata is not a substitute for reading the terms.
+- `pnpm campaign -- --min 130 --window 24h` — reaches R3
+  - `evidence/campaigns/2026-09-16T14-15-52-602Z.md`
+  - Delivery records for 32 distinct third-party hosts are computed from 343 published receipts spanning 46.6 hours, never from seller-reported metadata. Each record carries counts and reason codes rather than a score, shows which checks were available for that endpoint, and renders INSUFFICIENT SAMPLE below 20 calls instead of a percentage. Independently corroborated: the discovery index reported a mimeType for 5 of 100 resources while the live 402s carried one for 38 of 38 — the index is not the terms.
 
-**Notes.** HELD AT R0. The claim is about DELIVERY RECORDS computed from receipts, and no receipt exists because nothing has been paid for. The probe evidence shows terms are read from the seller's own response rather than from metadata, which supports the mechanism but does not evidence the claim. R2 requires a recorded gated call. Under 20 gated calls an endpoint renders INSUFFICIENT SAMPLE, never a percentage. PROJECT_BASELINE rows are excluded from third-party counts.
+**Notes.** R3 reached 2026-09-17. Read the counts carefully: of 60 sellers paid in the G4 sweep, 13 did not deliver, but 11 of those 13 were OUR malformed requests — 8 unsubstituted path placeholders and 3 requiring an API key the seller declares. Endpoint pages show which checks were available precisely so our error rate cannot be read as theirs.
 
 ## Forbidden vocabulary (§18)
 
