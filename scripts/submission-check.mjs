@@ -157,16 +157,24 @@ const drafts = existsSync(upstreamDir)
  * are still candidates for filing count toward this row.
  */
 const live = drafts.filter((f) => !/^#.*SUPERSEDED/im.test(readFileSync(join(upstreamDir, f), "utf8")));
+/*
+ * Read the report's own Status line rather than scanning the whole document. A report may
+ * legitimately say "not filed" about one observation it deliberately withheld while the report
+ * itself is filed — scanning the body made that honest sentence fail the row. Narrowing to the
+ * Status line also lets us demand the evidence: a filed report must carry its issue URL.
+ */
+const ISSUE_URL = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/issues\/\d+/;
 const filed = live.filter((f) => {
   const t = readFileSync(join(upstreamDir, f), "utf8");
-  return !/ready to file|DRAFT, NOT FILED|not filed/i.test(t);
+  const status = /^\*\*Status:\*\*(.*)$/im.exec(t)?.[1] ?? "";
+  return ISSUE_URL.test(status) && !/ready to file|DRAFT, NOT FILED|not filed/i.test(status);
 });
 add(
   "Upstream report filed",
   filed.length > 0,
   live.length === 0
     ? "no report drafted"
-    : `${live.length} ready to file, ${filed.length} filed (${drafts.length - live.length} superseded)`,
+    : `${live.length} report(s), ${filed.length} filed (${drafts.length - live.length} superseded)`,
   "outward-facing — file docs/upstream/2026-09-16-x402-discovery-conformance.md, then replace its 'ready to file' line with the issue URL",
 );
 

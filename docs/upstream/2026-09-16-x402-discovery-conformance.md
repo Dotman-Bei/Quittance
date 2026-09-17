@@ -1,10 +1,10 @@
 # Upstream report — two x402 discovery conformance issues found in production
 
-**Status:** ready to file. Both findings **re-verified live on 2026-09-17**.
+**Status:** **FILED 2026-09-17.** https://github.com/x402-foundation/x402/issues/3510 · https://github.com/x402-foundation/x402/issues/3511 — both findings re-verified live the same day.
 **Found by:** probing the public x402 discovery index while building a delivery-verification
 gate. Both surfaced as real integration failures, not by reading the spec looking for problems.
 
-**Where to file:** `github.com/x402-foundation/x402`.
+**Filed at:** `github.com/x402-foundation/x402`.
 
 > Corrected 2026-09-17. This document previously said `coinbase/x402`. That repository is now a
 > **fork** of `x402-foundation/x402` with **issues disabled** (`has_issues: false`, last push
@@ -12,11 +12,15 @@ gate. Both surfaced as real integration failures, not by reading the spec lookin
 > `dd927a26cfefc98c24b3ec38b3a8f204dad0c60d` resolves in the foundation repo, so the pin is
 > unaffected.
 
-Ready-to-paste issue bodies, formatted to the repo's `bug_report.yml` template:
+Filed as two issues, one per finding, formatted to the repo's `bug_report.yml` template:
 
-- `docs/upstream/issues/1-amount-atomic-units.md`
-- `docs/upstream/issues/2-bazaar-input-mirrors-probe.md`
-- `docs/upstream/issues/FILE_THESE.md` — prefilled links
+| Finding | Issue | Body |
+|---|---|---|
+| 1 · non-integral `amount` | [#3510](https://github.com/x402-foundation/x402/issues/3510) | `docs/upstream/issues/1-amount-atomic-units.md` |
+| 2 · `info.input` mirrors the probe | [#3511](https://github.com/x402-foundation/x402/issues/3511) | `docs/upstream/issues/2-bazaar-input-mirrors-probe.md` |
+
+Both opened by the repository owner after reading them, per the upstream CONTRIBUTING requirement
+that AI-assisted contributions be personally verified before opening. Both carry the `bug` label.
 
 Checked for duplicates 2026-09-17 across `atomic units amount`, `bazaar bodyType`, `bazaar method`,
 `discovery mimeType`: no existing issue covers either finding.

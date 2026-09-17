@@ -1090,3 +1090,30 @@ report cites our own evidence under the owner's name.
 
 The secondary observation is **not** being filed — the issue template routes catalog-visibility
 problems to the facilitator provider. It stays recorded in the report.
+
+---
+
+## 2026-09-17 · Upstream report filed — #3510 and #3511
+
+Both issues opened against `x402-foundation/x402` by the repository owner, who read each body first.
+Both carry the `bug` label. G9 moves to **6 of 7**; the demo video is the last row.
+
+- **[#3510](https://github.com/x402-foundation/x402/issues/3510)** — `amount` has no stated numeric
+  constraint; `api.hyperextend.xyz` advertises `"0.111"` beside a correct `"111000"`.
+- **[#3511](https://github.com/x402-foundation/x402/issues/3511)** — `chat.gedx402.com` mirrors the
+  probing HTTP method into its bazaar `info.input`, yielding a GET declaration carrying a JSON body.
+
+### The submission check was wrong, and filing exposed it
+
+`submission:check` decided the row by scanning the whole report for `not filed`. The report
+legitimately contains that phrase — about the secondary observation it deliberately withheld,
+because the upstream issue template routes catalog-visibility problems to the facilitator provider.
+So an honest sentence about one withheld observation would have failed the row for the whole report.
+
+The fix was not to reword the prose. The check now reads the report's **Status** line only, and
+requires it to carry a GitHub issue URL matching `/issues/\d+`. That is stricter than before — the
+old check passed on the absence of a phrase, the new one passes only on the presence of evidence.
+Verified both ways: strip the URL and the row goes back to `[MISS]`.
+
+A checker that can be satisfied by editing prose is not measuring anything. This one now needs a URL
+that either resolves or does not.

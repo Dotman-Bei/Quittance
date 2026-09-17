@@ -292,9 +292,17 @@ The long version, written against this project on purpose, is
 Built for the KeeperHub Agent Economy Hackathon. Live counterparty: x402 resources listed in the
 public discovery index on Base mainnet.
 
-Upstream findings produced from real friction, drafted for filing:
-[`docs/upstream/`](docs/upstream/2026-09-16-x402-discovery-conformance.md) — a resource advertising a
-non-integral `amount`, and one whose discovery declaration changes depending on how you probe it.
+Upstream findings produced from real friction, **filed 2026-09-17** against
+[`x402-foundation/x402`](https://github.com/x402-foundation/x402):
+
+- [**#3510**](https://github.com/x402-foundation/x402/issues/3510) — a live resource advertises
+  `amount: "0.111"` where the spec says atomic units, and the spec states no constraint to cite.
+- [**#3511**](https://github.com/x402-foundation/x402/issues/3511) — a resource's bazaar
+  `info.input` changes depending on which HTTP method you probe it with.
+
+Both cost us real failed calls before they were understood. Working notes, including a dated
+correction to one of them, are in
+[`docs/upstream/`](docs/upstream/2026-09-16-x402-discovery-conformance.md).
 
 Further reading: [PRD.md](PRD.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [SECURITY.md](SECURITY.md) ·
 [AGENTS.md](AGENTS.md) · [docs/phase.md](docs/phase.md) · [docs/kill-criteria.md](docs/kill-criteria.md)

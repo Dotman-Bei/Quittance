@@ -1,4 +1,14 @@
-# File these two issues
+# Both issues — FILED 2026-09-17
+
+- #3510 — https://github.com/x402-foundation/x402/issues/3510
+- #3511 — https://github.com/x402-foundation/x402/issues/3511
+
+Opened by the repository owner after reading each body. The rest of this file is the preparation
+that produced them, kept because it records how they were checked before filing.
+
+---
+
+## (original) File these two issues
 
 Target: **`x402-foundation/x402`** (not `coinbase/x402` — that is now a fork with issues disabled).
 
@@ -37,7 +47,7 @@ Note: `--body-file` bypasses the issue template, so the body carries its own `##
 `## Steps to reproduce` / `## Environment` headings. That is why the two files are written with them.
 The `bug` label is applied by the template only — add `--label bug` if you want it on these.
 
-## After filing
+## After filing — done
 
-Replace the **Status** line in `docs/upstream/2026-09-16-x402-discovery-conformance.md` with the two
-issue URLs, and update C-006's evidence entry in `claims.json` if you are citing upstream engagement.
+The **Status** line in `docs/upstream/2026-09-16-x402-discovery-conformance.md` now carries both
+issue URLs, and `pnpm submission:check` reads that line to decide the row.
