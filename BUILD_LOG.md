@@ -1117,3 +1117,36 @@ Verified both ways: strip the URL and the row goes back to `[MISS]`.
 
 A checker that can be satisfied by editing prose is not measuring anything. This one now needs a URL
 that either resolves or does not.
+
+---
+
+## 2026-09-17 · Gate G9 passed · Cinematic Product Demo Video Created & Verified
+
+### What was done
+
+Completed the cinematic product demo video adhering strictly to the reverse-engineered reference design (`https://youtu.be/hqXJ6dZCs2k`), `hyperframes`, `hackathon-demo-video` failure-first narrative arc, and `claude-design-video-prompt` sound design.
+
+- **Narrative sequence (PRD §23):** Failure path shown first (HTTP 404 from `chat.gedx402.com`, non-discharge recorded, zero KeeperHub execution), followed by structural delivery (HTTP 200 from `dicex402.vercel.app`, `DELIVERED_AS_ADVERTISED`, BaseScan fee tx `0x015f4520...` and KeeperHub run `b56dusna0v6diklwih7eu`), independent verification via `quittance verify` re-deriving byte-identically on an air-gapped machine, and candid limitations disclosure (structural checks only, trusted observer boundary).
+- **Hard block compliance:** Zero green anywhere in the palette. Discharges styled in electric blue (`#3B82F6`) and white; non-discharges in amber (`#F59E0B`) and red (`#EF4444`). Zero forbidden vocabulary in script or UI strings. Pure 7 verdict states.
+- **Two legs named honestly:** Purchase leg relayed directly to seller with zero gate underwriting; fee leg governed by Quittance and executed via KeeperHub.
+- **Visual execution:** Built high-fidelity GSAP timeline composition in `/root/quittance-demo/index.html` with dual-anchor HUD, tactile cursor choreography, and staged browser viewports.
+- **Audio production:** Generated voiceover using Kokoro-82M ONNX model (`am_michael`, conversational 1.0x pacing). Mixed multi-track master audio with atmospheric background score, automatic voice ducking (-0.32), and tactile mechanical SFX cues (`sfx_click`, `sfx_chime`, `sfx_thud`).
+- **Headless Chrome rendering:** Rendered 3,960 frames at 1920x1080 24fps using HyperFrames multi-worker headless Chrome into `evidence/quittance_demo.mp4` (37.4 MB, 2m45s).
+- `pnpm submission:check` now reports 7 of 7 rows passed: **Gate G9 PASSED**.
+
+### Files created and modified
+
+- `evidence/quittance_demo.mp4` — final rendered MP4 artifact (1920x1080 24fps, H.264/AAC, 37.4 MB, 2m45s)
+- `/root/quittance-demo/` — full reproducible HyperFrames studio workspace (`index.html`, `generate_audio.py`, `mix_audio.py`, `frame.md`, `BRIEF.md`, `hyperframes.json`, `audio/`, `renders/`)
+- `README.md` — updated demo section and acceptance gate status (9 of 10 gates pass)
+- `docs/submission.md` — artifact checklist updated with verified video and keeperhub execution status
+- `docs/phase.md` — G9 PASSED logged in the phase of record
+- `BUILD_LOG.md` — this entry
+
+### Commands run
+
+- `hyperframes lint` in `/root/quittance-demo`: exit code 0 (0 errors, 0 warnings).
+- `hyperframes render --fps 24 --workers 2 -o /root/quittance-demo/renders/quittance_demo.mp4`: exit code 0.
+- `pnpm submission:check`: exit code 0, 7 of 7 rows passed. Gate G9 PASSED.
+- `pnpm claim:verify`: exit code 0 (7 claims clean, no forbidden vocabulary).
+- `pnpm test`: exit code 0 (61 tests passed across all packages).

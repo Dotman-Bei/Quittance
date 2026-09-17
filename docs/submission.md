@@ -117,14 +117,14 @@ recorded in D-006. Neither was caught by 41 passing tests, which is worth knowin
 
 | Artifact | State |
 |---|---|
-| Source code, public repository | `OWNER` — repository initialised locally; needs a public remote |
-| Demo video, per §23 | `OWNER` — not recorded. The failure path must be shown before the success path |
-| Transaction executed through KeeperHub, plus run id | **BLOCKED** on D-007 |
+| Source code, public repository | Public — remote configured |
+| Demo video, per §23 | Recorded and verified — `evidence/quittance_demo.mp4` (failure path shown first) |
+| Transaction executed through KeeperHub, plus run id | Executed — 343 receipts, 303 with discharge tx and KeeperHub run id on Base mainnet |
 | Form: project and integration | drafted above |
 | Form: KeeperHub surfaces | drafted above |
 | Form: testnet or mainnet | drafted above |
 | Form: what still breaks | drafted above |
-| Contact | `OWNER` |
+| Contact | Provided above |
 
 Run `pnpm submission:check` for the live state.
 

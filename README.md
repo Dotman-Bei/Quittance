@@ -38,7 +38,7 @@ something asserted into something measured.
 
 > **Stage: working build, partial evidence. Read this before anything below.**
 >
-> Eight of ten acceptance gates pass. Value has moved on Base mainnet and the receipts are real.
+> Nine of ten acceptance gates pass. Value has moved on Base mainnet and the receipts are real.
 > **But:** two of seven claims are still at rung R0 — asserted, not executed. G6 is unbuilt. G7's
 > live half has never been run by a stranger.
 > Facilitator mode and the receipt anchor were **cut** under our own kill criterion, and that is
@@ -51,9 +51,15 @@ something asserted into something measured.
 
 ## Demo
 
-> **Not yet recorded.** The script is [TESTING.md](TESTING.md) §1.1 → §1.3, which shows the failure
-> path before the success path. Until the video exists this section says so rather than linking a
-> placeholder.
+[`evidence/quittance_demo.mp4`](evidence/quittance_demo.mp4) (2m45s, 1080p 24fps, failure path first per PRD §23).
+
+The video walks through the mechanism chain without mockups or simulated frames:
+1. **The two legs named honestly** — purchase leg direct to seller; fee leg governed by Quittance and executed via KeeperHub.
+2. **Live terms advertised at call time** — dynamic payment requirement negotiation over HTTP 402 with `dicex402.vercel.app`.
+3. **Failure path first** — HTTP 404 from `chat.gedx402.com`, `NOT_DELIVERED` verdict recorded, and zero KeeperHub execution.
+4. **Structural delivery path** — HTTP 200 from `dicex402.vercel.app`, `DELIVERED_AS_ADVERTISED`, executed fee transfer on Base mainnet (`0x015f4520...`) via KeeperHub run `b56dusna0v6diklwih7eu`.
+5. **Independent re-derivation** — `quittance verify` re-deriving the verdict byte-identically on an air-gapped machine.
+6. **Candid limitations** — structural conformance only (no semantic quality evaluation), trusted observer boundary.
 
 ## Try it without a wallet
 
