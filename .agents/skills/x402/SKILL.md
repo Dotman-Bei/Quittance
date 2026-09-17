@@ -8,6 +8,12 @@ description: The x402 payments protocol specification — v1 and v2, the HTTP tr
 **Pinned upstream: `coinbase/x402` @ branch `main`, commit `dd927a26cfefc98c24b3ec38b3a8f204dad0c60d`.**
 Every file in `references/` is pinned by SHA-256 in `../../../skills-lock.json`.
 
+> **Note, 2026-09-17.** Upstream has moved to `x402-foundation/x402`; `coinbase/x402` is now a fork
+> of it with issues disabled. The pin above is left exactly as it was — it records where these bytes
+> were actually fetched from, and rewriting it would falsify that. The pinned commit
+> `dd927a26` resolves in the foundation repo and the content is unchanged, so the SHA-256 pins still
+> verify. **File upstream reports against `x402-foundation/x402`.**
+
 ## Read this before touching advertised terms
 
 **Do not work from memory about x402.** Never invent a header name, a field name, a calldata layout,

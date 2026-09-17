@@ -1044,3 +1044,49 @@ error rate cannot be read as theirs.
 **8 of 10 pass:** G1, G2, G3, G4, G5, G8, G10, and G7's credential-free half. G6 is unbuilt and is
 not in K8's protection order. G9 stands at 5 of 7 — the demo video and filing the upstream report are
 the only rows left, and both are the owner's.
+
+---
+
+## 2026-09-17 · Upstream report prepared for filing — and corrected in three places
+
+Filing is outward-facing and stays the owner's action. What could be done without credentials was
+done: the report was re-verified, and checking it turned up three things wrong with it.
+
+### The target repo was wrong
+
+The report said to file at `coinbase/x402`. That repository is now a **fork** of
+`x402-foundation/x402` with **issues disabled** — filing there is impossible, and the mistake would
+have been discovered only at the form. Corrected throughout.
+
+The pin in `skills-lock.json` still names `coinbase/x402` and was **deliberately left alone**: it
+records where these bytes were actually fetched from, and editing it to look current would falsify
+provenance. The pinned commit `dd927a26` resolves in the foundation repo with identical content, so
+all 47 SHA-256 pins still verify. A note in the skill explains this rather than a silent rewrite.
+
+### One finding overclaimed
+
+Finding 2 argued that the spec nowhere says `bodyType` must not appear with a body-less method.
+Reading the live `bazaar.md` shows it effectively does — Query Methods (GET/HEAD/DELETE) and Body
+Methods (POST/PUT/PATCH) are two closed field tables, and facilitators **must** validate `info`
+against `schema` before cataloging. The GET declaration was already invalid.
+
+That does not kill the finding, it sharpens it. The genuinely unwritten part is narrower and more
+interesting: **nothing says `info.input` must not vary with the probing request.** The report now
+carries a dated correction rather than a quiet edit, and the issue body leads with the narrow claim.
+An issue that overclaims against a spec its maintainers wrote gets closed, deservedly.
+
+### Both findings re-verified live
+
+Re-probed today. `api.hyperextend.xyz` still advertises `"0.111"` beside a correct `"111000"`;
+`chat.gedx402.com` still mirrors the probing method into its declaration. Both spec quotes checked
+against `main` — identical. Duplicate search across four query sets: nothing covers either finding.
+
+### Left ready, not filed
+
+`docs/upstream/issues/` holds both bodies formatted to the repo's `bug_report.yml`, plus prefilled
+links that open the form with every field populated. Stopping at the form is deliberate: the repo's
+CONTRIBUTING asks that AI-assisted contributions be personally verified before opening, and this
+report cites our own evidence under the owner's name.
+
+The secondary observation is **not** being filed — the issue template routes catalog-visibility
+problems to the facilitator provider. It stays recorded in the report.
