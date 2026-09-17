@@ -66,7 +66,11 @@ export function SummaryStats({
         <p className="num mt-2 text-2xl text-stark">{rate}</p>
         <p className="mt-2 text-xs text-muted">
           {discharged} discharged of {thirdParty.length}. Below {SAMPLE_FLOOR} calls no
-          percentage is shown.
+          percentage is shown.{" "}
+          <span className="text-frost">
+            Read the shortfall carefully: most non-discharges we have recorded were caused by
+            our own malformed requests, not by sellers failing.
+          </span>
         </p>
       </Card>
 
