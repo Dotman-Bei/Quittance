@@ -1181,3 +1181,59 @@ rather than from a description of it.
 
 Nothing about this mattered to a judge. It mattered because a repository arguing that seller-reported
 metadata should be replaced by measurement should not carry a hand-typed number about its own video.
+
+---
+
+## 2026-09-18 · Responsive coverage widened, and the corpus stopped being re-parsed per request
+
+### Responsive: nothing was broken, the tests just were not looking
+
+The suite covered 375 to 1920 across four routes. It passed, and it was passing over a gap.
+It never tried **320px**, the width that actually breaks layouts (Galaxy Fold closed, SE 1st gen),
+never tried an ultrawide 2560, and never loaded either detail route, which carry the densest
+content in the app: a canonical receipt JSON block and a per-host record table.
+
+Extended to 7 viewports and both detail routes, plus a test that long unbroken tokens (a 64-char
+hash, a contract address) wrap instead of shouldering the page sideways at 320px. **32 tests, all
+passing.** No layout fix was needed. The value here is that the claim is now checked at the widths
+where it would fail, rather than only where it was already known to hold.
+
+### The real cost was the loader, not the layout
+
+`/receipts` took ~476ms. Every request to `/`, `/receipts` and `/endpoints` read all 343 receipt
+files **one at a time**, awaiting each `readFile` before starting the next, then zod-parsed and
+re-derived each verdict, to produce a result identical to the previous request's.
+
+Two changes:
+
+**Bounded-batch reads.** 32 at a time rather than 343 sequential round trips. Not unbounded
+`Promise.all`: that opens every file at once and fails on a host with a small descriptor limit.
+Same shape as `probe:all`, for the same reason it was needed there.
+
+**A cache keyed on the directory, not on a clock.** The corpus is append-only and immutable once
+written, so re-parsing it is pure waste. The key is (file count, directory mtime). A time-based TTL
+was the wrong tool: a stale ledger is not a cosmetic problem here, it would show a judge a receipt
+count that does not match the repository. Adding or removing a receipt changes both key components,
+which is exactly what the e2e fixtures do, so tests see their own writes. Verified by hand: 344 rows,
+add a file and it reads 345, remove it and it returns to 344.
+
+The accepted limit is written into the comment rather than left to be discovered: editing a receipt
+in place without changing the file count would not invalidate the cache. Receipts are written once
+and never edited. If that stops being true, the cache has to go.
+
+| Route | Before | After (median of 7) |
+|---|---|---|
+| `/` | 505 ms | **40 ms** |
+| `/receipts` | 476 ms | **80 ms** |
+| `/endpoints` | 548 ms | **39 ms** |
+| `/verify` | 5 ms | 12 ms |
+
+Bundles were already small and are unchanged: 102 kB shared, 125 kB on the heaviest route.
+
+`/receipts` still ships 555 kB of HTML, 70 kB gzipped, because it renders all 343 rows. That is
+**deliberate and not being paginated.** The page's claim is "every gated call, newest first", and a
+default-truncated ledger would quietly undercut the one thing this surface exists to demonstrate.
+
+One flake in the first full run, `audit.spec.ts` reporting a failed request. It did not reproduce in
+isolation or on a second full run, 59 passing both times. Recorded rather than ignored: if it returns,
+it is a prefetch racing the fixture teardown, not the cache.

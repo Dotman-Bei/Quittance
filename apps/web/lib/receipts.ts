@@ -5,7 +5,7 @@
  * corpus is empty the surfaces render "no runs yet" and say so. That is the honest
  * state of this repository at phase P1, not a loading condition.
  */
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { Receipt, type VerdictState } from "@quittance/protocol-types";
@@ -50,6 +50,31 @@ function resolveEvidenceDir(): string {
 
 const EVIDENCE_DIR = resolveEvidenceDir();
 
+/*
+ * The corpus is append-only and immutable once written, so parsing it again on every
+ * request is pure waste: 343 files read, zod-validated and re-derived to produce a result
+ * identical to the last one. It is cached on the directory's own state rather than for a
+ * fixed duration, because a stale ledger here is not a cosmetic problem, it would show a
+ * judge a receipt count that does not match the repository.
+ *
+ * The key is (file count, directory mtime). Adding or removing a receipt changes both on
+ * Linux, which is what the e2e suite does when it seeds and unseeds fixtures, so the tests
+ * see their own writes. Editing a receipt IN PLACE without changing the file count would
+ * not invalidate this, and that is an accepted limit: receipts are written once and never
+ * edited. If that ever stops being true, this cache has to go.
+ */
+type LoadedCorpus = {
+  readonly receipts: readonly StoredReceipt[];
+  readonly unreadable: number;
+};
+let cache: { count: number; stamp: number; value: LoadedCorpus } | null = null;
+
+function cacheHitFor(count: number, stamp: number): LoadedCorpus | null {
+  if (cache === null) return null;
+  if (cache.count !== count || cache.stamp !== stamp) return null;
+  return cache.value;
+}
+
 /**
  * Reads every receipt in evidence/receipts. A malformed file is skipped and counted,
  * never silently dropped: the count is surfaced so a reader knows the corpus is partial.
@@ -69,39 +94,77 @@ export async function loadReceipts(): Promise<{
     throw error;
   }
 
+  /* mtime of the directory itself, not of any file in it. 0 if it cannot be read: that
+     simply means every load misses the cache, which is correct rather than stale. */
+  let dirStamp = 0;
+  try {
+    dirStamp = (await stat(EVIDENCE_DIR)).mtimeMs;
+  } catch {
+    dirStamp = 0;
+  }
+
+  const cached = dirStamp === 0 ? null : cacheHitFor(names.length, dirStamp);
+  if (cached !== null) return cached;
+
   const receipts: StoredReceipt[] = [];
   let unreadable = 0;
 
-  for (const name of names) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(await readFile(join(EVIDENCE_DIR, name), "utf8"));
-    } catch {
-      // Counted, not swallowed: the total is rendered on the surface.
-      unreadable += 1;
-      continue;
+  /*
+   * Read in bounded batches rather than one file at a time. The previous loop awaited each
+   * readFile in sequence, so 343 receipts cost 343 round trips to the filesystem before the
+   * first byte of HTML. Unbounded Promise.all is not the fix either: it opens every file at
+   * once and on a serverless host with a small descriptor limit that fails under its own
+   * weight. The same bounded-worker shape as probe:all, and for the same reason.
+   */
+  const BATCH = 32;
+  for (let i = 0; i < names.length; i += BATCH) {
+    const batch = names.slice(i, i + BATCH);
+    const read = await Promise.all(
+      batch.map(async (name) => {
+        try {
+          return { name, text: await readFile(join(EVIDENCE_DIR, name), "utf8") };
+        } catch {
+          return { name, text: null };
+        }
+      }),
+    );
+    for (const { name, text } of read) {
+      if (text === null) {
+        // Counted, not swallowed: the total is rendered on the surface.
+        unreadable += 1;
+        continue;
+      }
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        unreadable += 1;
+        continue;
+      }
+      const result = Receipt.safeParse(parsed);
+      if (!result.success) {
+        unreadable += 1;
+        continue;
+      }
+      const receipt = result.data;
+      const reDerived = verdict({
+        intent: receipt.intent,
+        advertised: receipt.advertised,
+        observed: receipt.observed,
+      });
+      receipts.push({
+        leaf: name.replace(/\.json$/, ""),
+        receipt,
+        reDerived,
+        agrees: reDerived === receipt.publishedVerdict,
+      });
     }
-    const result = Receipt.safeParse(parsed);
-    if (!result.success) {
-      unreadable += 1;
-      continue;
-    }
-    const receipt = result.data;
-    const reDerived = verdict({
-      intent: receipt.intent,
-      advertised: receipt.advertised,
-      observed: receipt.observed,
-    });
-    receipts.push({
-      leaf: name.replace(/\.json$/, ""),
-      receipt,
-      reDerived,
-      agrees: reDerived === receipt.publishedVerdict,
-    });
   }
 
   receipts.sort((a, b) => b.receipt.request.startedAt.localeCompare(a.receipt.request.startedAt));
-  return { receipts, unreadable };
+  const loaded = { receipts, unreadable } as const;
+  if (dirStamp !== 0) cache = { count: names.length, stamp: dirStamp, value: loaded };
+  return loaded;
 }
 
 /** §9 endpoint pages: fewer than 20 calls renders INSUFFICIENT SAMPLE, not a percentage. */

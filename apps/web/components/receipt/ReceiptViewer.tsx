@@ -17,7 +17,13 @@ export function ReceiptViewer({ receipt }: { receipt: ReceiptType }) {
           Canonical receipt — the exact pre-image of the leaf hash
         </span>
       </div>
-      <pre className="max-h-[32rem] overflow-auto px-3 py-3 text-xs leading-relaxed text-frost">
+      {/*
+        Canonical JSON is a single unbroken line, so at 320px it rendered 8417px wide and had
+        to be dragged through sideways. It wraps now instead. Soft wraps are a rendering
+        concern only: the DOM text is untouched, so copying still yields the exact pre-image
+        of the leaf hash, which is the whole point of showing it.
+      */}
+      <pre className="max-h-[32rem] overflow-auto px-3 py-3 text-xs leading-relaxed whitespace-pre-wrap break-all text-frost">
         <code>{canonical}</code>
       </pre>
     </div>
