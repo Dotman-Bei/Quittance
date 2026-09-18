@@ -98,7 +98,7 @@ was caught by 41 passing tests.
 | Artifact | State |
 |---|---|
 | Source code, public repository | Public — remote configured |
-| Demo video, per §23 | Recorded and verified — `evidence/quittance_demo.mp4` (failure path shown first) |
+| Demo video, per §23 | Recorded — https://youtu.be/F8fvQNC44wE (4m58s, 1080p24, failure path shown first). Archival copy: `evidence/quittance_demo.mp4` |
 | Transaction executed through KeeperHub, plus run id | Executed — 343 receipts, 303 with discharge tx and KeeperHub run id on Base mainnet |
 | Form: project and integration | drafted above |
 | Form: KeeperHub surfaces | drafted above |

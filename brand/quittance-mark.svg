@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Quittance">
+  <!-- Export master. Baseline is pinned explicitly (y=46.3) rather than centred with
+       dominant-baseline, which rsvg and several other rasterisers ignore. Inter Black to
+       match the navbar mark; falls back to the system stack where Inter is absent. -->
+  <rect width="64" height="64" rx="24" fill="#C4FF0D"/>
+  <text x="32" y="46.3"
+        font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        font-size="42" font-weight="900" fill="#000"
+        text-anchor="middle">Q</text>
+</svg>

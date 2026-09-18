@@ -9,7 +9,7 @@
 </div>
 
 <p align="center">
-  <img alt="gates" src="https://img.shields.io/badge/acceptance_gates-8_of_10_passing-c4ff0d?style=flat-square&labelColor=1a1f0f">
+  <img alt="gates" src="https://img.shields.io/badge/acceptance_gates-9_of_10_passing-c4ff0d?style=flat-square&labelColor=1a1f0f">
   <img alt="network" src="https://img.shields.io/badge/Base_mainnet-live-c4ff0d?style=flat-square&labelColor=1a1f0f">
   <img alt="receipts" src="https://img.shields.io/badge/receipts-343_re--derivable-c4ff0d?style=flat-square&labelColor=1a1f0f">
   <img alt="transactions" src="https://img.shields.io/badge/KeeperHub_fee_txs-303-c4ff0d?style=flat-square&labelColor=1a1f0f">
@@ -51,7 +51,9 @@ something asserted into something measured.
 
 ## Demo
 
-[`evidence/quittance_demo.mp4`](evidence/quittance_demo.mp4) (2m45s, 1080p 24fps, failure path first per PRD §23).
+**[Watch on YouTube](https://youtu.be/F8fvQNC44wE)** — 4m58s, 1080p 24fps, failure path first per PRD §23.
+
+Archival copy in the repo: [`evidence/quittance_demo.mp4`](evidence/quittance_demo.mp4) (17.6 MB, h264/aac).
 
 The video walks through the mechanism chain without mockups or simulated frames:
 1. **The two legs named honestly** — purchase leg direct to seller; fee leg governed by Quittance and executed via KeeperHub.

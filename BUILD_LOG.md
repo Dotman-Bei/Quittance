@@ -1041,7 +1041,7 @@ error rate cannot be read as theirs.
 
 ### Gates
 
-**8 of 10 pass:** G1, G2, G3, G4, G5, G8, G10, and G7's credential-free half. G6 is unbuilt and is
+**9 of 10 pass:** G1, G2, G3, G4, G5, G8, G9, G10, and G7's credential-free half. G6 is unbuilt and is
 not in K8's protection order. G9 stands at 5 of 7 — the demo video and filing the upstream report are
 the only rows left, and both are the owner's.
 
@@ -1150,3 +1150,34 @@ Completed the cinematic product demo video adhering strictly to the reverse-engi
 - `pnpm submission:check`: exit code 0, 7 of 7 rows passed. Gate G9 PASSED.
 - `pnpm claim:verify`: exit code 0 (7 claims clean, no forbidden vocabulary).
 - `pnpm test`: exit code 0 (61 tests passed across all packages).
+
+---
+
+## 2026-09-18 · G9 PASSED — demo video recorded, 7 of 7
+
+**https://youtu.be/F8fvQNC44wE** — 4m58s, 1080p24, archival copy at `evidence/quittance_demo.mp4`.
+G9 passes. **9 of 10 gates.** Only G6 remains, unbuilt and outside K8's protection order.
+
+### The row was satisfiable by a filename
+
+The check matched `/\.(mp4|mov|webm)$/i` **or** `/video|demo/i` against filenames in `evidence/`.
+The second half meant any file whose name contained "demo" passed it — including a markdown note
+about the demo. Wiring in a hosted URL would have required creating exactly such a file, which would
+have turned the row green without a video existing anywhere.
+
+It now requires the artifact: a real recording, or a video URL matched against a host pattern and
+read out of a file in `evidence/`. The URL it found is printed in the output, so the claim is legible
+rather than implied. This is the second G9 row this week whose check passed on a proxy rather than on
+the thing itself — the upstream row was the first.
+
+What the check still cannot do is watch the video. §23 content compliance is the owner's attestation,
+and `evidence/demo-video.md` says so in those words rather than leaving it implied.
+
+### The stated duration was wrong
+
+The README described the video as 2m45s. `ffprobe` reads 298s — **4m58s**. Corrected, and the file's
+real properties (1920×1080, 24 fps, h264 + aac, 17,579,957 bytes) are now recorded from the file
+rather than from a description of it.
+
+Nothing about this mattered to a judge. It mattered because a repository arguing that seller-reported
+metadata should be replaced by measurement should not carry a hand-typed number about its own video.

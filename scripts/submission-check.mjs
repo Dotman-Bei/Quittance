@@ -41,13 +41,34 @@ add("Public repository", gitOk, gitDetail, "run `git init`, commit, and push to 
 
 /* ---- 2. Demo video (§23) ------------------------------------------------- */
 const videoDir = join(ROOT, "evidence");
-const videos = existsSync(videoDir)
-  ? readdirSync(videoDir).filter((f) => /\.(mp4|mov|webm)$/i.test(f) || /video|demo/i.test(f))
+/*
+ * Matching on filename alone passed on any file whose name contained "demo" — including this
+ * comment's own file. A row that a filename can satisfy measures nothing, so the check now wants
+ * the artifact itself: a local recording, or a hosted URL written down inside evidence/.
+ *
+ * What this cannot do is watch the video. Content compliance with §23 is the owner's attestation
+ * and is recorded as such in evidence/demo-video.md. The URL is printed below so that whoever
+ * reads this output sees exactly what is being claimed.
+ */
+const VIDEO_URL =
+  /https:\/\/(?:www\.)?(?:youtu\.be\/[\w-]+|youtube\.com\/watch\?v=[\w-]+|(?:vimeo\.com|[\w-]+\.loom\.com\/share)\/[\w-]+)/;
+const videoFiles = existsSync(videoDir)
+  ? readdirSync(videoDir).filter((f) => /\.(mp4|mov|webm)$/i.test(f))
   : [];
+let videoUrl = null;
+if (existsSync(videoDir)) {
+  for (const f of readdirSync(videoDir).filter((f) => f.endsWith(".md"))) {
+    const hit = VIDEO_URL.exec(readFileSync(join(videoDir, f), "utf8"));
+    if (hit) {
+      videoUrl = hit[0];
+      break;
+    }
+  }
+}
 add(
   "Demo video",
-  videos.length > 0,
-  videos.length > 0 ? videos.join(", ") : "no video artifact in evidence/",
+  videoFiles.length > 0 || videoUrl !== null,
+  videoUrl ?? (videoFiles.length > 0 ? videoFiles.join(", ") : "no recording in evidence/ and no video URL recorded there"),
   "record per §23: the failure path is shown BEFORE the success path",
 );
 
