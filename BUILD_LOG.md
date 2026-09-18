@@ -1237,3 +1237,53 @@ default-truncated ledger would quietly undercut the one thing this surface exist
 One flake in the first full run, `audit.spec.ts` reporting a failed request. It did not reproduce in
 isolation or on a second full run, 59 passing both times. Recorded rather than ignored: if it returns,
 it is a prefetch racing the fixture teardown, not the cache.
+
+---
+
+## 2026-09-18 · The navbar was 232px tall on a phone, and the suite had passed it
+
+Reported by the owner, not by a test. Worth recording why the test missed it.
+
+The bar is `sticky top-0`, so its height is spent at every scroll position rather than once.
+On a 375px phone it measured **232px**, roughly a third of the screen, permanently. The layout
+was `flex-wrap` with four things competing for one line: the mark, the wordmark, four tabs, and a
+call to action pinned right with `ml-auto`. It resolved into four stacked rows, the button alone
+on the last one.
+
+Every responsive check passed it, because **wrapping is not overflow.** The suite asked whether the
+page scrolled sideways and whether controls were 44px. A bar that wraps into four rows answers both
+correctly and is still broken. Height was the property that mattered and nothing asserted it.
+
+### The fix
+
+Below `sm` the bar collapses to one row: the mark without the wordmark, and the tabs in a track that
+scrolls inside itself. The "Re-derive a receipt" button is hidden there rather than shrunk, because
+it navigates to `/verify` and the Verify tab sitting beside it already does. On a phone it was
+costing a whole row to say the same thing twice.
+
+Two things surfaced while fixing it:
+
+**`sm` was the wrong breakpoint for the button.** Restoring it at 640 put the bar back to 126px at
+768, overrunning the line by a little under 20px. It returns at `lg` instead, the first width where
+the mark, wordmark, four tabs and the button all fit with room left.
+
+**`globals.css` was fighting the fix.** The `min-width: 0` rule on every flex child exists to stop
+wide content pushing the page sideways. In a scrolling track it also let the tabs compress under
+their own labels until the text overlapped, which the screenshot caught and no assertion would have.
+`shrink-0` on each tab pins the width so the track scrolls instead.
+
+| Width | Before | After |
+|---|---|---|
+| 320–480 | 232px | **62px** |
+| 640–900 | 126px | **70px** |
+| 1024+ | 70px | 70px |
+
+### Two assertions added, aimed at the thing that actually failed
+
+- The navbar is one row at every viewport, checked as height under 88px **and** as every tab sharing
+  a vertical offset. The second is the real test: it does not care how tall a row is, only that there
+  is one.
+- At 320 every tab keeps a real width and the track is the thing that scrolls, which pins the
+  `min-width: 0` interaction so it cannot come back quietly.
+
+**34 responsive tests, 61 e2e, all passing.**

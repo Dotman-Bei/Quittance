@@ -160,3 +160,69 @@ test("fold-320 — hashes and addresses wrap instead of pushing the page", async
   });
   expect(overflowing, overflowing.join(" | ")).toEqual([]);
 });
+
+/*
+ * The navbar is sticky, so its height is spent at every scroll position rather than once.
+ * It used to wrap: 232px on a 375px phone, a third of the screen, permanently. The overflow
+ * checks above all passed it, because wrapping is not overflow. Height is the thing that
+ * had to be asserted, and was not.
+ */
+test("the navbar stays one row at every width", async ({ page }) => {
+  const tooTall: string[] = [];
+  const wrapped: string[] = [];
+
+  for (const vp of VIEWPORTS) {
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const m = await page.evaluate(() => {
+      const nav = document.querySelector("nav[aria-label=Primary]");
+      if (nav === null) return null;
+      /* Same row means same vertical offset. Independent of how tall the row happens to be. */
+      const tops = Array.from(nav.querySelectorAll("li > a")).map((a) =>
+        Math.round(a.getBoundingClientRect().top),
+      );
+      return { height: Math.round(nav.getBoundingClientRect().height), rows: new Set(tops).size };
+    });
+    if (m === null) throw new Error("primary nav not found");
+
+    /* One row of 44px controls plus the bar's own padding. A wrap lands far above this. */
+    if (m.height > 88) tooTall.push(`${vp.name}(${vp.width}): ${m.height}px`);
+    if (m.rows > 1) wrapped.push(`${vp.name}(${vp.width}): tabs on ${m.rows} rows`);
+  }
+
+  expect(tooTall, tooTall.join(" | ")).toEqual([]);
+  expect(wrapped, wrapped.join(" | ")).toEqual([]);
+});
+
+/*
+ * When the tabs cannot fit they must scroll inside their own track, not shrink. globals.css
+ * puts `min-width: 0` on every flex child to stop wide content pushing the page sideways,
+ * and that rule was also letting these tabs compress under their own labels until the text
+ * overlapped. Every tab has to keep a real width and stay reachable.
+ */
+test("fold-320 — nav tabs keep their width and the track scrolls", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 653 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  const m = await page.evaluate(() => {
+    const track = document.querySelector("nav[aria-label=Primary] ul");
+    if (track === null) return null;
+    const links = Array.from(track.querySelectorAll("li > a"));
+    return {
+      count: links.length,
+      narrow: links
+        .filter((a) => a.getBoundingClientRect().width < 56)
+        .map((a) => `${(a.textContent ?? "").trim()} ${Math.round(a.getBoundingClientRect().width)}px`),
+      scrolls: track.scrollWidth > track.clientWidth,
+    };
+  });
+  if (m === null) throw new Error("nav track not found");
+
+  expect(m.count).toBe(4);
+  expect(m.narrow, m.narrow.join(" | ")).toEqual([]);
+  /* At 320 the four tabs genuinely do not fit, so the track must be the thing that scrolls. */
+  expect(m.scrolls).toBe(true);
+});

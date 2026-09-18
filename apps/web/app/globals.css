@@ -216,3 +216,19 @@ kbd {
   table-layout: fixed;
   overflow-wrap: anywhere;
 }
+
+/*
+ * The mobile navigation track. Below sm the four tabs do not fit a 320px bar, so the track
+ * scrolls inside itself instead of wrapping the sticky header onto extra rows. The
+ * scrollbar is hidden because a visible gutter inside a pill-shaped nav reads as a
+ * rendering fault rather than an affordance; the track still scrolls by touch, wheel and
+ * keyboard, and focusing a tab scrolls it into view.
+ */
+.nav-track {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav-track::-webkit-scrollbar {
+  display: none;
+}
