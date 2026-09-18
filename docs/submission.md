@@ -73,14 +73,17 @@ stranger without our involvement.
 adopt — was cut under D-008 and not built. `ReceiptAnchor` was cut, so published receipts are not
 tamper-evident on chain and rest on our word and public hash records that we have not edited them.
 
-**6. Two of seven claims remain at rung R0.** C-001 and C-002 require independent reproduction by a stranger
-from a fresh clone (R4). Four claims sit at R3, and one (adversarial baseline) sits at R2. Third-party adoption
-is zero — nothing here is evidence of commercial demand.
+**6. Two of seven claims sit at rung R0, and two are short of their target.** Three claims are at R3 and two
+at R2; four of the seven are at the rung they target. C-002 (a stranger re-deriving a verdict from the receipt
+*and the chain*) is at R0 against a target of R4, because nothing in the verifier reads chain state yet. C-006
+(recovery under induced failure) is at R0 because G6 is unbuilt. C-001 is at R2 against a target of R4 —
+reaching it needs independent reproduction by a stranger from a fresh clone, which by definition we cannot do
+ourselves. Third-party adoption is zero; nothing here is evidence of commercial demand.
 
 **7. Two of our own bugs were found by real data, not by tests.** Validating `accepts[]` as a whole rejected an
 entire seller over a malformed offer on a network we never target. And `probe:all` once printed
 `PROTOCOL_CONFIG_CHANGED` and `G1: PASSED` in the same output. Both are fixed and recorded in D-006. Neither
-was caught by 41 passing tests.
+was caught by the test suite, which passes.
 
 ---
 
